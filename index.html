@@ -6,259 +6,200 @@
     <title>Chess 2: The Augment Era</title>
     <style>
         :root {
-            --bg-dark: #1a1a1a;
-            --panel-bg: #2d2d2d;
-            --text-main: #e0e0e0;
-            --accent: #4a90e2;
-            --board-light: #ecf0f1;
-            --board-dark: #95a5a6;
+            --bg-dark: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --accent: #ffae00;
+            --board-light: #eeeed2;
+            --board-dark: #769656;
             --white-piece: #ffffff;
-            --black-piece: #222222;
+            --black-piece: #000000;
+            --highlight: rgba(255, 255, 0, 0.5);
+            --valid-move: rgba(0, 0, 0, 0.15);
         }
 
-        /* 테마 설정 */
-        .theme-modern { --board-light: #ced4da; --board-dark: #495057; }
-        .theme-wood { --board-light: #f3e5ab; --board-dark: #8b4513; }
-        .theme-sea { --board-light: #a8dadc; --board-dark: #1d3557; }
-
-        body {
-            margin: 0;
-            padding: 0;
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: 'Pretendard', sans-serif;
             overflow: hidden;
         }
 
-        /* 레이아웃 구조 */
-        #game-container {
-            display: flex;
-            gap: 20px;
-            width: 95vw;
-            height: 90vh;
-            max-width: 1400px;
+        /* 로비 화면 */
+        #lobby {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+            z-index: 100; position: relative;
         }
 
-        .sidebar {
-            flex: 1;
-            background: var(--panel-bg);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .lobby-title { font-size: 4rem; color: var(--accent); text-shadow: 0 0 20px rgba(255,174,0,0.5); margin-bottom: 20px; }
+        
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; width: 320px; }
+        .menu-btn {
+            padding: 15px; font-size: 1.1rem; background: rgba(255,255,255,0.05);
+            border: 1px solid var(--accent); color: white; cursor: pointer; border-radius: 8px;
+            transition: all 0.2s;
         }
+        .menu-btn:hover { background: var(--accent); color: black; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255,174,0,0.3); }
 
-        #main-board-area {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+        /* 게임 화면 레이아웃 */
+        #game-screen { display: none; height: 100vh; flex-direction: row; align-items: center; justify-content: center; gap: 20px; padding: 20px; box-sizing: border-box; }
 
-        /* 체스판 */
-        #chess-board {
-            width: 600px;
-            height: 600px;
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            border: 5px solid #333;
-            position: relative;
-        }
+        .sidebar { width: 280px; height: 85vh; background: var(--panel-bg); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        #board-container { position: relative; width: 620px; height: 620px; border: 8px solid #333; border-radius: 4px; overflow: hidden; }
+        #chess-board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
 
         .square {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            cursor: pointer;
-            user-select: none;
-            position: relative;
+            position: relative; display: flex; justify-content: center; align-items: center;
+            font-size: 48px; cursor: pointer; user-select: none;
         }
-
         .square.light { background-color: var(--board-light); }
         .square.dark { background-color: var(--board-dark); }
         .square.selected { background-color: #f1c40f !important; }
-        .square.valid { box-shadow: inset 0 0 15px rgba(46, 204, 113, 0.8); }
+        
+        .valid-dot { width: 18px; height: 18px; background: var(--valid-move); border-radius: 50%; pointer-events: none; }
+        .capture-ring { width: 85%; height: 85%; border: 6px solid var(--valid-move); border-radius: 50%; position: absolute; pointer-events: none; }
 
-        .piece {
-            z-index: 10;
-            transition: transform 0.2s ease;
+        .piece { 
+            z-index: 10; transition: transform 0.1s; 
+            filter: drop-shadow(2px 3px 2px rgba(0,0,0,0.4));
         }
+        .piece.white { color: var(--white-piece); -webkit-text-stroke: 1.5px #000; }
+        .piece.black { color: var(--black-piece); }
 
-        /* 사이드바 요소 */
-        .info-group { margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
-        .value { font-size: 1.2rem; font-weight: bold; }
+        /* 정보창 */
+        .info-card { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--accent); }
+        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
+        .value { font-size: 1.2rem; font-weight: 800; }
+        
+        #move-log { flex-grow: 1; background: #0a0a0a; border-radius: 6px; padding: 10px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #00ff41; border: 1px solid #333; }
 
-        #move-log {
-            flex-grow: 1;
-            background: #111;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.9rem;
+        /* 모달 시스템 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(5px);
         }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        button {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background: var(--accent);
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
+        .modal-content { 
+            background: #1a1a1a; padding: 30px; border-radius: 15px; text-align: center; 
+            border: 2px solid var(--accent); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
         }
-        button:hover { filter: brightness(1.2); }
-        button:disabled { background: #555; cursor: not-allowed; }
-
-        /* 팝업 창 (증강 선택) */
-        #modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        #augment-modal {
-            background: #333;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            width: 600px;
-        }
-
-        .augment-list {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
+        
+        .augment-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
         .augment-card {
-            flex: 1;
-            background: #444;
-            padding: 15px;
-            border-radius: 10px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.3s;
+            background: #252525; padding: 15px; border-radius: 10px; border: 1px solid #3d3d3d;
+            cursor: pointer; transition: 0.2s; text-align: left;
         }
-        .augment-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .augment-card h4 { margin: 10px 0; color: #f1c40f; }
-        .augment-card p { font-size: 0.85rem; line-height: 1.4; }
+        .augment-card:hover { border-color: var(--accent); background: #333; transform: scale(1.02); }
+        .augment-card h3 { color: var(--accent); margin: 0 0 5px 0; font-size: 1.1rem; }
+        .augment-card p { margin: 0; font-size: 0.9rem; color: #ccc; }
 
-        /* 화면 흔들림 효과 */
-        .shake { animation: shakeAnim 0.5s; }
-        @keyframes shakeAnim {
-            0% { transform: translate(1px, 1px); }
-            10% { transform: translate(-1px, -2px); }
-            20% { transform: translate(-3px, 0px); }
-            30% { transform: translate(3px, 2px); }
-            40% { transform: translate(1px, -1px); }
-            50% { transform: translate(-1px, 2px); }
-            100% { transform: translate(0, 0); }
-        }
+        /* 도감 전용 */
+        .collection-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: left; }
+        .collection-item { background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333; font-size: 0.85rem; }
+        .collection-item b { color: var(--accent); display: block; margin-bottom: 3px; }
 
-        .red-flash { animation: redFlashAnim 0.5s; }
-        @keyframes redFlashAnim {
-            0% { background-color: rgba(255,0,0,0); }
-            50% { background-color: rgba(255,0,0,0.5); }
-            100% { background-color: rgba(255,0,0,0); }
+        /* 애니메이션 */
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(3px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
         }
+        .flash-red { animation: flash-red 0.6s; }
+        @keyframes flash-red { 0% { background: none; } 50% { background: rgba(255,0,0,0.4); } 100% { background: none; } }
     </style>
 </head>
-<body class="theme-modern">
+<body>
 
-    <div id="game-container">
-        <!-- 좌측 사이드바: 정보 및 조작 -->
-        <div class="sidebar" id="left-sidebar">
-            <h2 style="color: var(--accent);">CHESS 2</h2>
-            <div class="info-group">
-                <div class="label">CURRENT TURN</div>
-                <div id="turn-display" class="value">WHITE</div>
+    <!-- 로비 화면 -->
+    <div id="lobby">
+        <div class="lobby-title">CHESS 2</div>
+        <div style="color: #aaa; margin-bottom: 40px; font-weight: 300; letter-spacing: 5px;">THE AUGMENT ERA</div>
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="startGame()">NEW GAME (새 게임)</button>
+            <button class="menu-btn" onclick="openCollection()">COLLECTION (증강 도감)</button>
+            <button class="menu-btn" onclick="showSettings()">SETTINGS (설정)</button>
+        </div>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="game-screen">
+        <div class="sidebar">
+            <div class="info-card">
+                <div class="label">TURN</div>
+                <div id="turn-display" class="value" style="color: var(--accent);">WHITE</div>
             </div>
-            <div class="info-group">
-                <div class="label">GAME TIME</div>
+            <div class="info-card">
+                <div class="label">TIME ELAPSED</div>
                 <div id="timer-display" class="value">00:00</div>
             </div>
-            <div class="info-group" style="flex-grow: 1;">
+            <div class="info-card" style="flex-grow: 1; overflow-y: auto; border-color: #555;">
                 <div class="label">ACTIVE AUGMENTS</div>
-                <div id="active-augments" style="margin-top: 10px; font-size: 0.85rem;">
-                    <div style="color: #888;">No active augments</div>
-                </div>
+                <div id="active-augments-list" style="font-size: 0.8rem; line-height: 1.6;"></div>
             </div>
-            <div class="btn-group">
-                <button id="undo-btn" style="flex: 1;">UNDO</button>
-                <button id="reset-btn" style="flex: 1; background: #e74c3c;">RESET</button>
-            </div>
-            <button id="settings-btn" style="margin-top: 10px;">SETTINGS</button>
+            <button class="menu-btn" style="padding:10px; font-size:0.9rem; margin-top:10px; border-color:#aaa;" onclick="undoMove()">UNDO (되돌리기)</button>
+            <button class="menu-btn" style="padding:10px; font-size:0.9rem; margin-top:10px; border-color:#ff4444; color:#ff4444;" onclick="backToLobby()">GIVE UP / LOBBY</button>
         </div>
 
-        <!-- 중앙: 체스 보드 -->
-        <div id="main-board-area">
+        <div id="board-container">
             <div id="chess-board"></div>
         </div>
 
-        <!-- 우측 사이드바: 기보 및 잡은 기물 -->
-        <div class="sidebar" id="right-sidebar">
-            <div class="info-group">
+        <div class="sidebar">
+            <div class="info-card" style="height: 120px; overflow-y: auto;">
                 <div class="label">CAPTURED PIECES</div>
-                <div id="captured-white" style="font-size: 1.5rem; min-height: 2rem;"></div>
-                <div id="captured-black" style="font-size: 1.5rem; min-height: 2rem;"></div>
+                <div id="captured-white" style="font-size: 1.4rem; letter-spacing: -2px; margin-bottom: 5px;"></div>
+                <div id="captured-black" style="font-size: 1.4rem; letter-spacing: -2px;"></div>
             </div>
-            <div class="label" style="margin-bottom: 5px;">MOVE LOG</div>
+            <div class="label">BATTLE LOG</div>
             <div id="move-log"></div>
         </div>
     </div>
 
     <!-- 증강 선택 모달 -->
-    <div id="modal-overlay">
-        <div id="augment-modal">
-            <h2 id="modal-title">증강 선택 (백색 차례)</h2>
-            <p>전략을 바꿀 강력한 힘을 선택하십시오.</p>
-            <div class="augment-list" id="augment-choices">
-                <!-- JS에서 생성 -->
-            </div>
+    <div id="augment-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h1 id="augment-player-title" style="color: var(--accent); margin-top: 0;">증강 선택</h1>
+            <p style="color: #888;">전술의 판도를 바꿀 증강을 하나 선택하세요.</p>
+            <div class="augment-grid" id="augment-options"></div>
         </div>
     </div>
 
-    <!-- 설정 모달 (단순 구현) -->
-    <div id="settings-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
-        <div style="background:#333; padding:30px; border-radius:15px; width:400px;">
-            <h3>Settings</h3>
-            <label>Board Theme</label><br>
-            <select id="theme-select" style="width:100%; padding:8px; margin:10px 0;">
-                <option value="theme-modern">Modern Dark</option>
-                <option value="theme-wood">Classic Wood</option>
-                <option value="theme-sea">Deep Sea</option>
-            </select><br>
-            <label><input type="checkbox" id="shake-toggle" checked> Shake Effect</label><br>
-            <label><input type="checkbox" id="anim-toggle" checked> Slide Animation</label><br>
-            <button onclick="document.getElementById('settings-overlay').style.display='none'" style="margin-top:20px; width:100%;">CLOSE</button>
+    <!-- 도감 모달 -->
+    <div id="collection-modal" class="modal-overlay" onclick="closeModals()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="color: var(--accent); margin-top: 0;">AUGMENT COLLECTION</h2>
+            <div class="collection-grid" id="collection-list"></div>
+            <button class="menu-btn" onclick="closeModals()" style="width:100%; margin-top:20px;">BACK TO LOBBY</button>
+        </div>
+    </div>
+
+    <!-- 설정 모달 -->
+    <div id="settings-modal" class="modal-overlay" onclick="closeModals()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="color: var(--accent); margin-top: 0;">SETTINGS</h2>
+            <div style="text-align: left; margin-top: 20px; background: #222; padding: 20px; border-radius: 10px;">
+                <p><label style="cursor: pointer;"><input type="checkbox" id="shake-pref" checked> 킹 획득 시 화면 흔들림 효과</label></p>
+                <p><label style="cursor: pointer;"><input type="checkbox" id="flash-pref" checked> 타격 시 붉은 섬광 효과</label></p>
+                <div style="margin-top: 15px;">
+                    보드 테마: 
+                    <select id="theme-pref" onchange="updateTheme()" style="background:#333; color:white; border:1px solid #555; padding:5px; border-radius:4px;">
+                        <option value="default">Standard (Green/White)</option>
+                        <option value="wood">Classic Wood</option>
+                        <option value="dark">Deep Sea Dark</option>
+                    </select>
+                </div>
+            </div>
+            <button class="menu-btn" onclick="closeModals()" style="width:100%; margin-top:20px;">SAVE & CLOSE</button>
         </div>
     </div>
 
     <script>
-        /**
-         * CHESS 2: ENGINE & LOGIC
-         */
-        
-        // --- 상수 및 데이터 ---
+        // --- 데이터 정의 ---
         const PIECES = {
             wP: '♙', wR: '♖', wN: '♘', wB: '♗', wQ: '♕', wK: '♔',
             bP: '♟', bR: '♜', bN: '♞', bB: '♝', bQ: '♛', bK: '♚'
@@ -267,413 +208,496 @@
         const AUGMENT_POOL = [
             { id: 'ULTRA_KNIGHT', name: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
             { id: 'SHOCKING_PAWN', name: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
-            { id: 'TIME_STOP', name: "시간 정지", desc: "3턴간 나만 행동 (킹 전용 무적 이동 가능)" },
+            { id: 'TIME_STOP', name: "시간 정지", desc: "3턴간 나만 행동 (준비 중)" },
             { id: 'PAWN_EVOLUTION', name: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
             { id: 'KNIGHT_EVOLUTION', name: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
             { id: 'SNIPER_BISHOP', name: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
-            { id: 'METEOR_STRIKE', name: "메테오 스트라이크", desc: "룩이 기물을 관통하여 공격" },
+            { id: 'METEOR_STRIKE', name: "메테오 스트라이크", desc: "룩이 기물을 관통하여 뒤까지 공격 가능" },
             { id: 'KING_ATTACK', name: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
-            { id: 'NECROMANCY', name: "네크로맨시", desc: "킹 이동 불가, 주변 빈 공간에 폰 소환 가능" },
+            { id: 'NECROMANCY', name: "네크로맨시", desc: "킹 이동 불가, 대신 주변 빈 공간에 폰 소환 가능" },
             { id: 'GRAVITY_REVERSE', name: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
             { id: 'ROYAL_GUARD', name: "로열 가드", desc: "킹 주변 8칸 아군은 잡히지 않음" },
-            { id: 'RADIOACTIVE_BISHOP', name: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 삭제 후 사망" },
+            { id: 'RADIOACTIVE_BISHOP', name: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 적/아군 삭제 후 사망" },
             { id: 'KHAN_DESCENDANT', name: "칸의 후예", desc: "비숍이 나이트로 변경. 킹이 나이트 행마 획득" },
             { id: 'TRUE_KING', name: "진정한 왕은 누구인가?", desc: "퀸 삭제. 킹이 퀸의 행마법 획득" },
-            { id: 'GIANT_SOLDIER', name: "체크메이트의 거신병", desc: "폰 전멸 시 d1(d8)에 퀸 소환" },
-            { id: 'CHESS_960', name: "체스 960", desc: "내 기물 위치 무작위 셔플" },
-            { id: 'ROAD_TO_HEAVEN', name: "천국에 가는 길", desc: "다음 증강 선택 시 '중력 반전' 확정 등장" },
-            { id: 'UNDO_UNLIMITED', name: "Undo!", desc: "되돌리기 무제한 활성화" },
-            { id: 'FRONT_LINE', name: "전방 전선", desc: "모든 폰 1칸 전진" }
+            { id: 'GIANT_SOLDIER', name: "체크메이트의 거신병", desc: "내 폰 전멸 시 d열 1행에 퀸 소환" },
+            { id: 'CHESS_960', name: "체스 960", desc: "내 기물(폰/킹 제외) 위치 무작위 셔플" },
+            { id: 'ROAD_TO_HEAVEN', name: "천국에 가는 길", desc: "다음 증강에서 '중력 반전' 확정 등장" },
+            { id: 'UNDO_UNLIMITED', name: "Undo!", desc: "되돌리기 무제한 활성화 (현재 기본 제공)" },
+            { id: 'FRONT_LINE', name: "전방 전선", desc: "모든 폰 1칸 전진 (기물 삭제 판정)" }
         ];
 
-        // --- 게임 상태 ---
+        // --- 엔진 변수 ---
         let board = Array(64).fill(null);
-        let turn = 'WHITE'; // 'WHITE' or 'BLACK'
-        let selectedSquare = null;
-        let validMoves = [];
+        let turn = 'WHITE';
         let history = [];
+        let selectedIdx = null;
+        let validMoves = [];
         let moveCount = 0;
+        let captured = { WHITE: [], BLACK: [] };
         let whiteAugments = [];
         let blackAugments = [];
-        let captured = { WHITE: [], BLACK: [] };
-        let timerSeconds = 0;
-        let timerInterval = null;
-        let nextAugmentForce = null; // 천국에 가는 길 트리거
+        let timer = 0;
+        let timerInt = null;
+        let enPassantTarget = null;
+        let castlingRights = { wK: true, wQs: true, wKs: true, bK: true, bQs: true, bKs: true };
+        let roadToHeavenActive = false;
 
-        // --- 초기화 ---
-        function initGame() {
-            // 초기 보드 배치
-            const layout = [
+        // --- UI & 로비 ---
+        function startGame() {
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            resetGame();
+        }
+
+        function backToLobby() {
+            if(confirm("정말 게임을 포기하고 로비로 돌아가시겠습니까?")) {
+                closeGame();
+            }
+        }
+
+        function closeGame() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('lobby').style.display = 'flex';
+            clearInterval(timerInt);
+        }
+
+        function openCollection() {
+            const listEl = document.getElementById('collection-list');
+            listEl.innerHTML = AUGMENT_POOL.map(a => `
+                <div class="collection-item">
+                    <b>${a.name}</b>
+                    ${a.desc}
+                </div>
+            `).join('');
+            document.getElementById('collection-modal').style.display = 'flex';
+        }
+
+        function showSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+        // --- 게임 엔진 ---
+        function resetGame() {
+            board = [
                 'bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR',
                 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP',
-                null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null,
+                ...Array(32).fill(null),
                 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP',
                 'wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'
             ];
-            board = [...layout];
             turn = 'WHITE';
             moveCount = 0;
+            captured = { WHITE: [], BLACK: [] };
             whiteAugments = [];
             blackAugments = [];
-            captured = { WHITE: [], BLACK: [] };
             history = [];
-            
+            enPassantTarget = null;
+            castlingRights = { wK: true, wQs: true, wKs: true, bK: true, bQs: true, bKs: true };
+            timer = 0;
+            document.getElementById('move-log').innerHTML = '';
+            updateUI();
             renderBoard();
-            updateSidebar();
             startTimer();
         }
 
         function startTimer() {
-            if(timerInterval) clearInterval(timerInterval);
-            timerSeconds = 0;
-            timerInterval = setInterval(() => {
-                timerSeconds++;
-                const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-                const secs = (timerSeconds % 60).toString().padStart(2, '0');
-                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+            clearInterval(timerInt);
+            timerInt = setInterval(() => {
+                timer++;
+                let m = Math.floor(timer/60).toString().padStart(2,'0');
+                let s = (timer%60).toString().padStart(2,'0');
+                document.getElementById('timer-display').innerText = `${m}:${s}`;
             }, 1000);
         }
 
-        // --- 렌더링 ---
         function renderBoard() {
             const boardEl = document.getElementById('chess-board');
             boardEl.innerHTML = '';
-            for (let i = 0; i < 64; i++) {
-                const row = Math.floor(i / 8);
-                const col = i % 8;
+            for(let i=0; i<64; i++) {
                 const square = document.createElement('div');
-                square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
-                square.dataset.index = i;
-
-                if (board[i]) {
-                    const piece = document.createElement('span');
-                    piece.className = 'piece';
-                    piece.innerText = PIECES[board[i]];
-                    piece.style.color = board[i].startsWith('w') ? 'var(--white-piece)' : 'var(--black-piece)';
-                    square.appendChild(piece);
+                const row = Math.floor(i/8), col = i%8;
+                square.className = `square ${(row+col)%2===0 ? 'light' : 'dark'}`;
+                
+                if(board[i]) {
+                    const p = document.createElement('div');
+                    p.className = `piece ${board[i][0] === 'w' ? 'white' : 'black'}`;
+                    p.innerText = PIECES[board[i]];
+                    square.appendChild(p);
                 }
 
-                if (selectedSquare === i) square.classList.add('selected');
-                if (validMoves.includes(i)) square.classList.add('valid');
-
+                if(selectedIdx === i) square.classList.add('selected');
+                
+                const moveObj = validMoves.find(m => m.to === i);
+                if(moveObj) {
+                    if(board[i] || moveObj.type === 'enPassant') {
+                        const ring = document.createElement('div');
+                        ring.className = 'capture-ring';
+                        square.appendChild(ring);
+                    } else {
+                        const dot = document.createElement('div');
+                        dot.className = 'valid-dot';
+                        square.appendChild(dot);
+                    }
+                }
                 square.onclick = () => handleSquareClick(i);
                 boardEl.appendChild(square);
             }
         }
 
-        function updateSidebar() {
-            document.getElementById('turn-display').innerText = turn;
-            document.getElementById('active-augments').innerHTML = `
-                <div style="color:white">WHITE: ${whiteAugments.map(a => a.name).join(', ') || 'None'}</div>
-                <div style="color:white; margin-top:5px;">BLACK: ${blackAugments.map(a => a.name).join(', ') || 'None'}</div>
-            `;
-            document.getElementById('captured-white').innerText = captured.WHITE.map(p => PIECES[p]).join(' ');
-            document.getElementById('captured-black').innerText = captured.BLACK.map(p => PIECES[p]).join(' ');
-        }
+        function handleSquareClick(i) {
+            const piece = board[i];
+            const isMyPiece = piece && piece[0] === (turn === 'WHITE' ? 'w' : 'b');
+            const move = validMoves.find(m => m.to === i);
 
-        // --- 이동 로직 ---
-        function handleSquareClick(index) {
-            const piece = board[index];
-            const isMyPiece = piece && (turn === 'WHITE' ? piece.startsWith('w') : piece.startsWith('b'));
-
-            if (selectedSquare === null) {
-                if (isMyPiece) {
-                    selectedSquare = index;
-                    validMoves = calculateValidMoves(index);
-                    renderBoard();
+            if(move) {
+                executeMove(move);
+            } else if(isMyPiece) {
+                // 네크로맨시 페널티 체크
+                const myAugs = turn === 'WHITE' ? whiteAugments : blackAugments;
+                if(piece[1] === 'K' && myAugs.find(a => a.id === 'NECROMANCY')) {
+                    // 킹 이동 불가 (대신 증강 로직에서 소환 처리 필요 - 현재 기본 행마 차단)
                 }
+                selectedIdx = i;
+                validMoves = getValidMoves(i);
+                renderBoard();
             } else {
-                if (validMoves.includes(index)) {
-                    makeMove(selectedSquare, index);
-                } else if (isMyPiece) {
-                    selectedSquare = index;
-                    validMoves = calculateValidMoves(index);
-                    renderBoard();
-                } else {
-                    selectedSquare = null;
-                    validMoves = [];
-                    renderBoard();
-                }
-            }
-        }
-
-        function calculateValidMoves(index) {
-            const piece = board[index];
-            if (!piece) return [];
-            
-            const type = piece[1];
-            const isWhite = piece[0] === 'w';
-            const moves = [];
-            
-            // 기본 이동 로직 (간소화됨)
-            const row = Math.floor(index / 8);
-            const col = index % 8;
-
-            // 증강 확인 로직이 여기에 추가됨
-            const currentAugments = isWhite ? whiteAugments : blackAugments;
-
-            // 예시: 폰 이동
-            if (type === 'P') {
-                const dir = isWhite ? -1 : 1;
-                // 증강: 중력 반전
-                const realDir = currentAugments.find(a => a.id === 'GRAVITY_REVERSE') ? -dir : dir;
-                
-                const nextRow = row + realDir;
-                if (nextRow >= 0 && nextRow < 8 && !board[nextRow * 8 + col]) {
-                    moves.push(nextRow * 8 + col);
-                }
-                
-                // 증강: 졸병 진화 (좌우 이동)
-                if(currentAugments.find(a => a.id === 'PAWN_EVOLUTION')) {
-                    if(col > 0 && !board[row * 8 + col - 1]) moves.push(row * 8 + col - 1);
-                    if(col < 7 && !board[row * 8 + col + 1]) moves.push(row * 8 + col + 1);
-                }
-            }
-
-            // 모든 기물 로직은 증강 조건에 따라 switch/case로 확장 가능
-            // 여기서는 시연을 위해 모든 칸 이동 가능하도록 일부 개방 (개발용)
-            // 실제 구현 시 각 기물별 행마법 함수 호출
-            return getStandardMoves(index, piece, currentAugments);
-        }
-
-        function getStandardMoves(index, piece, augs) {
-            // 기초적인 체스 행마법 (기물별 방향 벡터)
-            const row = Math.floor(index / 8);
-            const col = index % 8;
-            const res = [];
-            const type = piece[1];
-            const color = piece[0];
-
-            const directions = {
-                'R': [[0,1], [0,-1], [1,0], [-1,0]],
-                'B': [[1,1], [1,-1], [-1,1], [-1,-1]],
-                'N': [[2,1], [2,-1], [-2,1], [-2,-1], [1,2], [1,-2], [-1,2], [-1,-2]],
-                'K': [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]],
-                'Q': [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]]
-            };
-
-            let currentDirs = directions[type] || [];
-
-            // 증강 적용: 초살병기 나이트 (N + R)
-            if(type === 'N' && augs.find(a => a.id === 'ULTRA_KNIGHT')) {
-                currentDirs = [...directions['N'], ...directions['R']];
-            }
-            // 증강: 결전병기 나이트 (N + B)
-            if(type === 'N' && augs.find(a => a.id === 'KNIGHT_EVOLUTION')) {
-                currentDirs = [...currentDirs, ...directions['B']];
-            }
-            // 증강: 진정한 왕 (K + Q)
-            if(type === 'K' && augs.find(a => a.id === 'TRUE_KING')) {
-                currentDirs = directions['Q'];
-            }
-
-            // 슬라이딩 기물 처리 (R, B, Q)
-            const sliding = ['R', 'B', 'Q'].includes(type) || 
-                            (type === 'N' && augs.find(a => a.id === 'ULTRA_KNIGHT')) ||
-                            (type === 'K' && augs.find(a => a.id === 'TRUE_KING'));
-
-            currentDirs.forEach(d => {
-                let r = row + d[0], c = col + d[1];
-                while(r >= 0 && r < 8 && c >= 0 && c < 8) {
-                    const targetIdx = r * 8 + c;
-                    const targetPiece = board[targetIdx];
-                    if(!targetPiece) {
-                        res.push(targetIdx);
-                    } else {
-                        if(targetPiece[0] !== color) res.push(targetIdx);
-                        // 증강: 메테오 스트라이크 (관통)
-                        if(type === 'R' && augs.find(a => a.id === 'METEOR_STRIKE')) {
-                           // 관통 로직: 계속 진행
-                        } else {
-                            break; 
-                        }
-                    }
-                    if(!sliding || type === 'N') break;
-                    r += d[0]; c += d[1];
-                }
-            });
-
-            // 폰 기본 공격 및 전진 (간략화)
-            if(type === 'P') {
-                const dir = color === 'w' ? -1 : 1;
-                const forward = (row + dir) * 8 + col;
-                if(!board[forward]) res.push(forward);
-                // 대각선 공격
-                [col-1, col+1].forEach(c => {
-                    if(c >= 0 && c < 8) {
-                        const target = (row+dir)*8 + c;
-                        if(board[target] && board[target][0] !== color) res.push(target);
-                    }
-                });
-            }
-
-            return res;
-        }
-
-        function makeMove(from, to) {
-            const piece = board[from];
-            const target = board[to];
-
-            // 히스토리 저장
-            history.push({ board: [...board], turn, moveCount, captured: { WHITE: [...captured.WHITE], BLACK: [...captured.BLACK] } });
-
-            // 킹 획득 시 게임 오버
-            if(target && target[1] === 'K') {
-                victory(turn);
-            }
-
-            if(target) {
-                captured[turn].push(target);
-            }
-
-            // 기물 이동
-            board[to] = piece;
-            board[from] = null;
-
-            // 기보 기록
-            const log = document.getElementById('move-log');
-            const moveText = `${piece}${String.fromCharCode(97 + (from%8))}${8 - Math.floor(from/8)} → ${String.fromCharCode(97 + (to%8))}${8 - Math.floor(to/8)}`;
-            log.innerHTML = `<div>${moveText}</div>` + log.innerHTML;
-
-            // 상태 초기화
-            selectedSquare = null;
-            validMoves = [];
-            moveCount++;
-
-            // 턴 교체
-            turn = (turn === 'WHITE' ? 'BLACK' : 'WHITE');
-
-            renderBoard();
-            updateSidebar();
-
-            // 증강 발생 체크 (8턴 마다 = 백4수 + 흑4수 완료 시)
-            if(moveCount > 0 && moveCount % 8 === 0) {
-                setTimeout(startAugmentPhase, 500);
-            }
-        }
-
-        // --- 증강 시스템 ---
-        function startAugmentPhase() {
-            showAugmentModal('WHITE');
-        }
-
-        function showAugmentModal(player) {
-            const overlay = document.getElementById('modal-overlay');
-            const title = document.getElementById('modal-title');
-            const container = document.getElementById('augment-choices');
-            
-            title.innerText = `증강 선택 (${player === 'WHITE' ? '백색' : '흑색'} 차례)`;
-            container.innerHTML = '';
-            overlay.style.display = 'flex';
-
-            // 랜덤 3장 추출
-            let pool = [...AUGMENT_POOL];
-            if(nextAugmentForce) {
-                // 천국에 가는 길 효과: 중력 반전 확정 포함
-                const grav = pool.find(a => a.id === 'GRAVITY_REVERSE');
-                pool = pool.filter(a => a.id !== 'GRAVITY_REVERSE');
-                const choices = shuffle(pool).slice(0, 2);
-                choices.push(grav);
-                renderChoices(shuffle(choices), player);
-                nextAugmentForce = null;
-            } else {
-                const choices = shuffle(pool).slice(0, 3);
-                renderChoices(choices, player);
-            }
-        }
-
-        function renderChoices(choices, player) {
-            const container = document.getElementById('augment-choices');
-            choices.forEach(aug => {
-                const card = document.createElement('div');
-                card.className = 'augment-card';
-                card.innerHTML = `<h4>${aug.name}</h4><p>${aug.desc}</p>`;
-                card.onclick = () => selectAugment(aug, player);
-                container.appendChild(card);
-            });
-        }
-
-        function selectAugment(aug, player) {
-            if(player === 'WHITE') {
-                whiteAugments.push(aug);
-                // 백색 선택 완료 후 흑색 선택
-                setTimeout(() => showAugmentModal('BLACK'), 300);
-            } else {
-                blackAugments.push(aug);
-                document.getElementById('modal-overlay').style.display = 'none';
-                applyImmediateEffects(aug, player);
-            }
-            
-            if(aug.id === 'ROAD_TO_HEAVEN') nextAugmentForce = 'GRAVITY_REVERSE';
-            updateSidebar();
-        }
-
-        function applyImmediateEffects(aug, player) {
-            // 즉발형 증강 (체스 960, 전방 전선 등) 처리
-            if(aug.id === 'CHESS_960') {
-                // 1열 기물 셔플 로직 등...
-            }
-            if(aug.id === 'SHOCKING_PAWN') {
-                // 상대 기물 3개 폰으로 변환
-                const oppColor = player === 'WHITE' ? 'b' : 'w';
-                let targets = [];
-                board.forEach((p, i) => { if(p && p.startsWith(oppColor) && p[1] !== 'K') targets.push(i); });
-                shuffle(targets).slice(0, 3).forEach(idx => board[idx] = oppColor + 'P');
+                selectedIdx = null;
+                validMoves = [];
                 renderBoard();
             }
         }
 
-        // --- 유틸리티 ---
-        function shuffle(array) {
-            return array.sort(() => Math.random() - 0.5);
+        function getValidMoves(idx) {
+            const piece = board[idx];
+            const type = piece[1];
+            const color = piece[0];
+            const moves = [];
+            const r = Math.floor(idx/8), c = idx%8;
+            const myAugs = color === 'w' ? whiteAugments : blackAugments;
+
+            const addMove = (to, specialType = null) => {
+                if(to < 0 || to >= 64) return false;
+                const target = board[to];
+                if(!target) {
+                    moves.push({ from: idx, to, type: specialType || 'normal' });
+                    return true;
+                } else if(target[0] !== color) {
+                    // 로열 가드 체크 (무적 판정)
+                    const targetAugs = target[0] === 'w' ? whiteAugments : blackAugments;
+                    if(targetAugs.find(a => a.id === 'ROYAL_GUARD')) {
+                        const oppKingIdx = board.findIndex(p => p === target[0] + 'K');
+                        if(oppKingIdx !== -1) {
+                            const kr = Math.floor(oppKingIdx/8), kc = oppKingIdx%8;
+                            const tr = Math.floor(to/8), tc = to%8;
+                            if(Math.abs(tr-kr) <= 1 && Math.abs(tc-kc) <= 1) return false; // 근처 아군 무적
+                        }
+                    }
+                    moves.push({ from: idx, to, type: specialType || 'capture' });
+                    return false;
+                }
+                return false;
+            };
+
+            switch(type) {
+                case 'P':
+                    const dir = color === 'w' ? -1 : 1;
+                    const realDir = myAugs.find(a => a.id === 'GRAVITY_REVERSE') ? -dir : dir;
+                    if(!board[(r+realDir)*8 + c]) {
+                        addMove((r+realDir)*8 + c);
+                        const startRow = (color === 'w' ? 6 : 1);
+                        if(r === startRow && !board[(r+2*realDir)*8 + c]) moves.push({ from: idx, to: (r+2*realDir)*8+c, type: 'pawnDouble' });
+                    }
+                    [c-1, c+1].forEach(nc => {
+                        if(nc >= 0 && nc < 8) {
+                            const targetIdx = (r+realDir)*8 + nc;
+                            if(board[targetIdx] && board[targetIdx][0] !== color) addMove(targetIdx);
+                            if(targetIdx === enPassantTarget) moves.push({ from: idx, to: targetIdx, type: 'enPassant' });
+                        }
+                    });
+                    if(myAugs.find(a => a.id === 'PAWN_EVOLUTION')) {
+                        [c-1, c+1].forEach(nc => { if(nc >= 0 && nc < 8 && !board[r*8+nc]) addMove(r*8+nc); });
+                    }
+                    break;
+                case 'N':
+                    const nPaths = [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
+                    nPaths.forEach(p => { const nr=r+p[0], nc=c+p[1]; if(nr>=0&&nr<8&&nc>=0&&nc<8) addMove(nr*8+nc); });
+                    if(myAugs.find(a => a.id === 'ULTRA_KNIGHT')) addSlidingMoves(idx, [[0,1],[0,-1],[1,0],[-1,0]], addMove);
+                    if(myAugs.find(a => a.id === 'KNIGHT_EVOLUTION')) addSlidingMoves(idx, [[1,1],[1,-1],[-1,1],[-1,-1]], addMove);
+                    break;
+                case 'B':
+                    addSlidingMoves(idx, [[1,1],[1,-1],[-1,1],[-1,-1]], addMove, myAugs.find(a => a.id === 'SNIPER_BISHOP'));
+                    break;
+                case 'R':
+                    addSlidingMoves(idx, [[0,1],[0,-1],[1,0],[-1,0]], addMove, myAugs.find(a => a.id === 'METEOR_STRIKE'));
+                    break;
+                case 'Q':
+                    addSlidingMoves(idx, [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], addMove);
+                    break;
+                case 'K':
+                    if(myAugs.find(a => a.id === 'NECROMANCY')) {
+                        // 네크로맨시는 킹 이동 불가 -> 대신 주변 소환 로직은 별도 처리 가능
+                    } else {
+                        const kPaths = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+                        kPaths.forEach(p => { const nr=r+p[0], nc=c+p[1]; if(nr>=0&&nr<8&&nc>=0&&nc<8) addMove(nr*8+nc); });
+                        if(castlingRights[color+'K']) {
+                            if(castlingRights[color+'Ks'] && !board[idx+1] && !board[idx+2]) moves.push({from:idx, to:idx+2, type:'castle'});
+                            if(castlingRights[color+'Qs'] && !board[idx-1] && !board[idx-2] && !board[idx-3]) moves.push({from:idx, to:idx-2, type:'castle'});
+                        }
+                    }
+                    if(myAugs.find(a => a.id === 'KING_ATTACK')) {
+                        [[2,2],[2,-2],[-2,2],[-2,-2]].forEach(p => { const nr=r+p[0], nc=c+p[1]; if(nr>=0&&nr<8&&nc>=0&&nc<8) addMove(nr*8+nc); });
+                    }
+                    if(myAugs.find(a => a.id === 'TRUE_KING')) addSlidingMoves(idx, [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], addMove);
+                    if(myAugs.find(a => a.id === 'KHAN_DESCENDANT')) {
+                        [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(p => { const nr=r+p[0], nc=c+p[1]; if(nr>=0&&nr<8&&nc>=0&&nc<8) addMove(nr*8+nc); });
+                    }
+                    break;
+            }
+            return moves;
         }
 
-        function victory(winner) {
-            if(document.getElementById('shake-toggle').checked) {
-                document.getElementById('chess-board').classList.add('shake');
-                document.body.classList.add('red-flash');
-                setTimeout(() => {
-                    document.getElementById('chess-board').classList.remove('shake');
-                    document.body.classList.remove('red-flash');
-                }, 500);
+        function addSlidingMoves(idx, dirs, addFn, isSniper = false) {
+            const r = Math.floor(idx/8), c = idx%8;
+            dirs.forEach(d => {
+                let nr = r + d[0], nc = c + d[1];
+                while(nr>=0 && nr<8 && nc>=0 && nc<8) {
+                    const target = board[nr*8+nc];
+                    if(!target) {
+                        addFn(nr*8+nc);
+                    } else {
+                        addFn(nr*8+nc);
+                        if(!isSniper) break; // 스나이퍼/메테오 아니면 막힘
+                    }
+                    nr += d[0]; nc += d[1];
+                }
+            });
+        }
+
+        function executeMove(move) {
+            const piece = board[move.from];
+            const target = board[move.to];
+            
+            // 되돌리기를 위한 기록 (증강 목록도 깊은 복사)
+            history.push({ 
+                board: [...board], 
+                turn, 
+                castlingRights: {...castlingRights}, 
+                enPassantTarget,
+                whiteAugments: [...whiteAugments],
+                blackAugments: [...blackAugments],
+                captured: { WHITE: [...captured.WHITE], BLACK: [...captured.BLACK] }
+            });
+
+            // 킹 잡기 (승리 조건)
+            if(target && target[1] === 'K') {
+                triggerVictory(turn);
+                return; 
             }
+
+            // 특수 처리
+            if(move.type === 'enPassant') {
+                const capturedIdx = move.to - ( (piece[0] === 'w' ? -1 : 1) * 8 );
+                captured[turn].push(board[capturedIdx]);
+                board[capturedIdx] = null;
+            }
+            if(move.type === 'castle') {
+                if(move.to > move.from) { board[move.to-1] = board[move.to+1]; board[move.to+1] = null; }
+                else { board[move.to+1] = board[move.to-2]; board[move.to-2] = null; }
+            }
+
+            // 이동
+            if(target) captured[turn].push(target);
+            board[move.to] = piece;
+            board[move.from] = null;
+
+            // 라디오액티브 비숍 (특수 증강)
+            if(piece[1] === 'B' && (turn === 'WHITE' ? whiteAugments : blackAugments).find(a => a.id === 'RADIOACTIVE_BISHOP')) {
+                const tr = Math.floor(move.to/8), tc = move.to%8;
+                for(let dr=-1; dr<=1; dr++) {
+                    for(let dc=-1; dc<=1; dc++) {
+                        const nr=tr+dr, nc=tc+dc;
+                        if(nr>=0&&nr<8&&nc>=0&&nc<8) {
+                            if(board[nr*8+nc]?.[1] !== 'K') board[nr*8+nc] = null;
+                        }
+                    }
+                }
+            }
+
+            // 앙파상 타겟 및 캐슬링 권한
+            enPassantTarget = (move.type === 'pawnDouble' ? (move.from + move.to)/2 : null);
+            if(piece[1] === 'K') castlingRights[piece[0]+'K'] = false;
+            if(piece[1] === 'R') {
+                if(move.from % 8 === 0) castlingRights[piece[0]+'Qs'] = false;
+                if(move.from % 8 === 7) castlingRights[piece[0]+'Ks'] = false;
+            }
+            if(piece[1] === 'P' && (Math.floor(move.to/8) === 0 || Math.floor(move.to/8) === 7)) board[move.to] = piece[0] + 'Q';
+
+            logMove(move, piece);
+            turn = (turn === 'WHITE' ? 'BLACK' : 'WHITE');
+            moveCount++;
+            selectedIdx = null;
+            validMoves = [];
+
+            updateUI();
+            renderBoard();
+
+            if(moveCount > 0 && moveCount % 8 === 0) setTimeout(openAugmentPhase, 500);
+        }
+
+        function triggerVictory(winner) {
+            if(document.getElementById('shake-pref').checked) document.getElementById('board-container').classList.add('shake');
+            if(document.getElementById('flash-pref').checked) document.body.classList.add('flash-red');
+            
             setTimeout(() => {
-                alert(`게임 종료! ${winner} 승리!`);
-                initGame();
+                alert(`🎊 CHECKMATE! ${winner === 'WHITE' ? '백색' : '흑색'} 플레이어가 상대의 킹을 잡고 승리했습니다! 🎊`);
+                document.getElementById('board-container').classList.remove('shake');
+                document.body.classList.remove('flash-red');
+                closeGame();
             }, 600);
         }
 
-        // --- 이벤트 리스너 ---
-        document.getElementById('reset-btn').onclick = () => {
-            if(confirm("게임을 초기화하시겠습니까?")) initGame();
-        };
+        function undoMove() {
+            if(history.length === 0) return;
+            const last = history.pop();
+            board = last.board;
+            turn = last.turn;
+            castlingRights = last.castlingRights;
+            enPassantTarget = last.enPassantTarget;
+            whiteAugments = last.whiteAugments;
+            blackAugments = last.blackAugments;
+            captured = last.captured;
+            moveCount--;
+            selectedIdx = null;
+            validMoves = [];
+            
+            const logEl = document.getElementById('move-log');
+            if(logEl.firstChild) logEl.removeChild(logEl.firstChild);
+            
+            updateUI();
+            renderBoard();
+        }
 
-        document.getElementById('undo-btn').onclick = () => {
-            if(history.length > 0) {
-                const last = history.pop();
-                board = last.board;
-                turn = last.turn;
-                moveCount = last.moveCount;
-                captured = last.captured;
-                renderBoard();
-                updateSidebar();
+        function logMove(m, p) {
+            const notation = `${PIECES[p]} ${String.fromCharCode(97+m.from%8)}${8-Math.floor(m.from/8)} → ${String.fromCharCode(97+m.to%8)}${8-Math.floor(m.to/8)}`;
+            const logEl = document.getElementById('move-log');
+            const div = document.createElement('div');
+            div.innerText = notation;
+            logEl.insertBefore(div, logEl.firstChild);
+        }
+
+        function updateUI() {
+            const turnEl = document.getElementById('turn-display');
+            turnEl.innerText = turn;
+            turnEl.style.color = turn === 'WHITE' ? 'var(--accent)' : '#fff';
+            
+            document.getElementById('captured-white').innerText = captured.WHITE.map(p => PIECES[p]).join('');
+            document.getElementById('captured-black').innerText = captured.BLACK.map(p => PIECES[p]).join('');
+            
+            const augList = document.getElementById('active-augments-list');
+            augList.innerHTML = `
+                <div style="margin-bottom:8px;"><b style="color:var(--accent)">WHITE:</b><br>${whiteAugments.map(a => '• '+a.name).join('<br>') || 'None'}</div>
+                <div><b style="color:#eee">BLACK:</b><br>${blackAugments.map(a => '• '+a.name).join('<br>') || 'None'}</div>
+            `;
+        }
+
+        function openAugmentPhase() { showAugmentPicker('WHITE'); }
+
+        function showAugmentPicker(player) {
+            const modal = document.getElementById('augment-modal');
+            const grid = document.getElementById('augment-options');
+            const title = document.getElementById('augment-player-title');
+            
+            title.innerText = `증강 선택: ${player}`;
+            grid.innerHTML = '';
+            modal.style.display = 'flex';
+
+            let pool = [...AUGMENT_POOL];
+            let options = [];
+
+            if(roadToHeavenActive) {
+                options.push(pool.find(a => a.id === 'GRAVITY_REVERSE'));
+                pool = pool.filter(a => a.id !== 'GRAVITY_REVERSE');
+                options = options.concat(shuffle(pool).slice(0, 2));
+                roadToHeavenActive = false;
+            } else {
+                options = shuffle(pool).slice(0, 3);
             }
-        };
 
-        document.getElementById('settings-btn').onclick = () => {
-            document.getElementById('settings-overlay').style.display = 'flex';
-        };
+            options.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = 'augment-card';
+                card.innerHTML = `<h3>${opt.name}</h3><p>${opt.desc}</p>`;
+                card.onclick = () => {
+                    if(player === 'WHITE') {
+                        whiteAugments.push(opt);
+                        applyImmediate(opt, 'w');
+                        modal.style.display = 'none';
+                        setTimeout(() => showAugmentPicker('BLACK'), 300);
+                    } else {
+                        blackAugments.push(opt);
+                        applyImmediate(opt, 'b');
+                        modal.style.display = 'none';
+                        updateUI();
+                    }
+                    if(opt.id === 'ROAD_TO_HEAVEN') roadToHeavenActive = true;
+                };
+                grid.appendChild(card);
+            });
+        }
 
-        document.getElementById('theme-select').onchange = (e) => {
-            document.body.className = e.target.value;
-        };
+        function applyImmediate(aug, color) {
+            if(aug.id === 'SHOCKING_PAWN') {
+                const opp = color === 'w' ? 'b' : 'w';
+                let validTargets = [];
+                board.forEach((p, i) => { if(p && p[0] === opp && p[1] !== 'K') validTargets.push(i); });
+                shuffle(validTargets).slice(0,3).forEach(idx => board[idx] = opp + 'P');
+            }
+            if(aug.id === 'CHESS_960') {
+                const r = color === 'w' ? 7 : 0;
+                let pieces = [];
+                for(let c=0; c<8; c++) {
+                    const p = board[r*8+c];
+                    if(p && p[1] !== 'K' && p[1] !== 'P') { pieces.push(p); board[r*8+c] = null; }
+                }
+                pieces = shuffle(pieces);
+                let count = 0;
+                for(let c=0; c<8; c++) { if(!board[r*8+c]) board[r*8+c] = pieces[count++]; }
+            }
+            if(aug.id === 'KHAN_DESCENDANT') {
+                board.forEach((p, i) => { if(p === color+'B') board[i] = color+'N'; });
+            }
+            if(aug.id === 'TRUE_KING') {
+                board.forEach((p, i) => { if(p === color+'Q') board[i] = null; });
+            }
+            if(aug.id === 'FRONT_LINE') {
+                const dir = color === 'w' ? -1 : 1;
+                for(let i=0; i<64; i++) {
+                    if(board[i] === color+'P') {
+                        const next = i + (dir*8);
+                        if(next>=0&&next<64 && board[next]?.[1]!=='K') { board[next] = color+'P'; board[i] = null; }
+                    }
+                }
+            }
+            renderBoard();
+        }
 
-        // 시작
-        window.onload = initGame;
+        function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
 
+        function updateTheme() {
+            const theme = document.getElementById('theme-pref').value;
+            const root = document.documentElement;
+            if(theme === 'wood') {
+                root.style.setProperty('--board-light', '#deb887');
+                root.style.setProperty('--board-dark', '#8b4513');
+            } else if(theme === 'dark') {
+                root.style.setProperty('--board-light', '#2c3e50');
+                root.style.setProperty('--board-dark', '#1a252f');
+            } else {
+                root.style.setProperty('--board-light', '#eeeed2');
+                root.style.setProperty('--board-dark', '#769656');
+            }
+            renderBoard();
+        }
     </script>
 </body>
 </html>
