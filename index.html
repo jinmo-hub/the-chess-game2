@@ -31,7 +31,7 @@
         /* Board Themes */
         .theme-modern { --light: #d1d5db; --dark: #4b5563; }
         .theme-wood { --light: #e9d5b3; --dark: #8b4513; }
-        .theme-ocean { --light: #a5f3fc; --dark: #0e7490; }
+        .theme-ocean { --light: #334155; --dark: #0f172a; }
 
         #game-container {
             display: flex;
@@ -41,13 +41,14 @@
         }
 
         .sidebar {
-            width: 300px;
+            width: 320px;
             background: var(--panel-dark);
-            border: 1px solid #333;
-            border-radius: 8px;
+            border: 2px solid #333;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
-            padding: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #board-wrapper {
@@ -62,10 +63,10 @@
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
-            width: 70vh;
-            height: 70vh;
-            border: 5px solid #333;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            width: 75vh;
+            height: 75vh;
+            border: 8px solid #222;
+            box-shadow: 0 0 60px rgba(0,0,0,0.7);
             position: relative;
         }
 
@@ -73,7 +74,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 3.5rem;
+            font-size: 3.8rem;
             cursor: pointer;
             position: relative;
             transition: background 0.2s;
@@ -81,22 +82,23 @@
 
         .square.light { background-color: var(--light); }
         .square.dark { background-color: var(--dark); }
-        .square.selected { background-color: rgba(197, 160, 89, 0.6) !important; }
-        .square.highlight { background-color: rgba(255, 255, 0, 0.3) !important; }
-        .square.last-move { background-color: rgba(100, 200, 100, 0.4) !important; }
+        .square.selected { background-color: rgba(197, 160, 89, 0.7) !important; }
+        .square.last-move { background-color: rgba(100, 200, 100, 0.3) !important; }
+        .square.in-check { background-color: rgba(255, 0, 0, 0.4) !important; }
 
         .piece {
             user-select: none;
             z-index: 10;
-            transition: transform 0.3s ease;
+            transition: transform 0.2s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
         }
 
         /* Augment Modal */
         #augment-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 100;
+            background: rgba(0,0,0,0.9);
+            z-index: 500;
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -104,65 +106,51 @@
         }
 
         .augment-card {
-            width: 240px;
-            height: 340px;
-            background: linear-gradient(135deg, #2a2a35 0%, #121215 100%);
-            border: 2px solid var(--accent-gold);
-            border-radius: 15px;
-            padding: 20px;
+            width: 260px;
+            height: 380px;
+            background: linear-gradient(145deg, #2a2a35 0%, #0a0a0c 100%);
+            border: 3px solid var(--accent-gold);
+            border-radius: 20px;
+            padding: 25px;
             margin: 0 15px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            box-shadow: 0 0 20px rgba(197, 160, 89, 0.2);
         }
 
         .augment-card:hover {
-            transform: translateY(-15px) scale(1.05);
-            box-shadow: 0 0 30px var(--accent-gold);
+            transform: translateY(-20px) scale(1.05);
+            box-shadow: 0 0 40px var(--accent-gold);
         }
 
         .card-title {
             color: var(--accent-gold);
             font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            height: 50px;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            height: 60px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            line-height: 1.2;
         }
 
         .card-desc {
-            font-size: 0.9rem;
-            color: #ccc;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            color: #ddd;
+            line-height: 1.5;
         }
-
-        /* Screen Shake */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shake { animation: shake 0.5s; }
 
         /* Lobby */
         #lobby {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #2a2a35 0%, #0f0f12 100%);
-            z-index: 200;
+            background: radial-gradient(circle at center, #2a2a35 0%, #08080a 100%);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -173,110 +161,162 @@
             background: transparent;
             border: 2px solid var(--accent-gold);
             color: var(--accent-gold);
-            padding: 12px 40px;
-            font-size: 1.5rem;
-            border-radius: 5px;
+            padding: 15px 50px;
+            font-size: 1.6rem;
+            border-radius: 8px;
             transition: all 0.3s;
-            margin-top: 20px;
+            margin-top: 25px;
+            cursor: pointer;
         }
 
         .btn-gold:hover {
             background: var(--accent-gold);
             color: black;
+            box-shadow: 0 0 30px var(--accent-gold);
         }
 
-        /* Notification for 3s delay */
+        /* Status Notification */
         #status-notif {
             position: fixed;
-            top: 20%;
+            top: 15%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(197, 160, 89, 0.9);
+            background: var(--accent-gold);
             color: black;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 1.4rem;
-            z-index: 1000;
+            padding: 18px 50px;
+            border-radius: 40px;
+            font-weight: 800;
+            font-size: 1.6rem;
+            z-index: 2000;
             display: none;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            border: 2px solid white;
         }
 
-        /* Captured pieces */
-        .captured-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 5px;
-            min-height: 80px;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
         }
+
+        select {
+            background: #2a2a35;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 2px 5px;
+            font-size: 0.8rem;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, 5px); }
+            50% { transform: translate(5px, -5px); }
+            75% { transform: translate(-5px, -5px); }
+        }
+        .shake-anim { animation: shake 0.4s ease-in-out; }
     </style>
 </head>
 <body class="theme-modern">
 
-    <!-- Status Notification -->
     <div id="status-notif">능력 발동 중...</div>
 
     <!-- Lobby -->
     <div id="lobby">
-        <h1 class="cinzel text-6xl mb-4 text-[#c5a059]">ARGUMENT CHESS</h1>
-        <p class="cinzel text-xl mb-12 tracking-widest opacity-70">~ the age of revolution ~</p>
-        <button class="btn-gold cinzel" onclick="startGame()">ENTER THE ARENA</button>
-        <button class="text-gray-500 mt-4 underline" onclick="showEncyclopedia()">증강 도감 (Encyclopedia)</button>
+        <h1 class="cinzel text-7xl mb-4 text-[#c5a059] font-bold">ARGUMENT CHESS</h1>
+        <p class="cinzel text-2xl mb-16 tracking-[0.5em] opacity-80">~ the age of revolution ~</p>
+        <div class="flex flex-col gap-4">
+            <button class="btn-gold cinzel" onclick="startGame()">ENTER THE ARENA</button>
+            <button class="text-gray-500 hover:text-white transition" onclick="showEncyclopedia()">증강 도감 (Encyclopedia)</button>
+        </div>
     </div>
 
     <!-- Augment Overlay -->
     <div id="augment-overlay">
-        <h2 id="augment-player-turn" class="cinzel text-4xl text-white mb-10">WHITE PLAYER SELECT</h2>
-        <div class="flex" id="augment-cards-container">
-            <!-- Cards will be injected here -->
-        </div>
+        <h2 id="augment-player-turn" class="cinzel text-5xl text-white mb-14 font-bold">WHITE PLAYER SELECT</h2>
+        <div class="flex" id="augment-cards-container"></div>
     </div>
 
-    <!-- Main Game UI -->
     <div id="game-container">
-        <!-- Left Sidebar -->
+        <!-- Left Sidebar: Status & Settings -->
         <div class="sidebar">
-            <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#333] pb-2">STATUS</h2>
-            <div class="mb-4">
-                <span class="text-gray-400">TURN:</span>
-                <span id="turn-display" class="float-right font-bold text-white">WHITE</span>
+            <h2 class="cinzel text-2xl text-center mb-6 border-b-2 border-[#c5a059] pb-2 text-[#c5a059]">STATUS</h2>
+            <div class="space-y-4 mb-8">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 font-bold">TURN</span>
+                    <span id="turn-display" class="font-black text-xl text-white">WHITE</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 font-bold">TIMER</span>
+                    <span id="timer-display" class="font-mono text-xl text-white">00:00</span>
+                </div>
             </div>
-            <div class="mb-4">
-                <span class="text-gray-400">TIME:</span>
-                <span id="timer-display" class="float-right font-mono">00:00</span>
+
+            <h3 class="text-sm font-bold text-[#c5a059] mb-3 uppercase tracking-tighter">Active Augments</h3>
+            <div class="flex-1 overflow-y-auto mb-6 bg-black/30 p-2 rounded border border-[#333]">
+                <ul id="active-augments" class="text-[0.7rem] space-y-2"></ul>
             </div>
-            <div class="flex-1 overflow-y-auto mt-4 border-t border-[#333] pt-4">
-                <h3 class="text-sm text-[#c5a059] mb-2">ACTIVE AUGMENTS</h3>
-                <ul id="active-augments" class="text-xs space-y-1"></ul>
+
+            <h3 class="text-sm font-bold text-[#c5a059] mb-3 uppercase tracking-tighter">Settings</h3>
+            <div class="bg-black/20 p-3 rounded border border-[#333] mb-6">
+                <div class="setting-item">
+                    <span>Board Theme</span>
+                    <select id="theme-select" onchange="changeTheme(this.value)">
+                        <option value="theme-modern">Modern Dark</option>
+                        <option value="theme-wood">Classic Wood</option>
+                        <option value="theme-ocean">Deep Sea</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <span>Shake Effect</span>
+                    <input type="checkbox" id="shake-toggle" checked>
+                </div>
             </div>
-            <div class="mt-4 grid grid-cols-2 gap-2">
-                <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-2 rounded text-xs">UNDO</button>
-                <button onclick="location.reload()" class="bg-red-900 hover:bg-red-800 p-2 rounded text-xs text-white">RESET</button>
+
+            <div class="grid grid-cols-1 gap-2">
+                <button onclick="showEncyclopedia()" class="bg-[#c5a059]/20 hover:bg-[#c5a059]/40 border border-[#c5a059] p-2 rounded text-xs font-bold transition">AUGMENT ENCYCLOPEDIA</button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-2 rounded text-xs font-bold transition">UNDO</button>
+                    <button onclick="location.reload()" class="bg-red-900/50 hover:bg-red-900 border border-red-700 p-2 rounded text-xs font-bold transition text-white">RESET</button>
+                </div>
             </div>
         </div>
 
-        <!-- Center Board -->
+        <!-- Center: Board -->
         <div id="board-wrapper">
             <div id="chess-board"></div>
         </div>
 
-        <!-- Right Sidebar -->
+        <!-- Right Sidebar: Logs & Captures -->
         <div class="sidebar">
-            <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#333] pb-2">LOGS</h2>
-            <div id="move-log" class="flex-1 overflow-y-auto text-xs space-y-1 font-mono text-gray-400 p-2">
+            <h2 class="cinzel text-2xl text-center mb-6 border-b-2 border-[#c5a059] pb-2 text-[#c5a059]">HISTORY</h2>
+            <div id="move-log" class="flex-1 overflow-y-auto text-[0.75rem] space-y-1 font-mono text-gray-400 p-2 bg-black/30 rounded border border-[#333] mb-6">
+                <div class="text-center opacity-30 mt-10 italic">No moves yet...</div>
             </div>
-            <div class="mt-4 border-t border-[#333] pt-4">
-                <h3 class="text-xs text-gray-500 mb-2">CAPTURED (WHITE)</h3>
-                <div id="captured-white" class="captured-container"></div>
-                <h3 class="text-xs text-gray-500 mt-2 mb-2">CAPTURED (BLACK)</h3>
-                <div id="captured-black" class="captured-container"></div>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-[0.65rem] text-gray-500 font-bold mb-2 uppercase">Captured by Black</h3>
+                    <div id="captured-white" class="captured-container min-h-[50px] bg-black/20 p-2 rounded border border-[#333]"></div>
+                </div>
+                <div>
+                    <h3 class="text-[0.65rem] text-gray-500 font-bold mb-2 uppercase">Captured by White</h3>
+                    <div id="captured-black" class="captured-container min-h-[50px] bg-black/20 p-2 rounded border border-[#333]"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Core Game Variables ---
-        const board = document.getElementById('chess-board');
+        const boardEl = document.getElementById('chess-board');
         const turnDisplay = document.getElementById('turn-display');
         const timerDisplay = document.getElementById('timer-display');
         const moveLog = document.getElementById('move-log');
@@ -290,11 +330,15 @@
             history: [],
             startTime: null,
             augments: { white: [], black: [] },
-            turnCount: 0,
             moveCount: 0,
             isAugmentPhase: false,
-            timeStopTurns: 0, // Remaining turns for time stop
-            undoUsed: 0
+            timeStopTurns: 0,
+            lastMove: null, // For highlighting and en passant
+            enPassantTarget: null,
+            castling: {
+                white: { kingSide: true, queenSide: true },
+                black: { kingSide: true, queenSide: true }
+            }
         };
 
         const PIECES = {
@@ -324,35 +368,21 @@
             { id: 'royal_guard', title: "로열 가드", desc: "킹 주변 아군은 잡히지 않음" }
         ];
 
-        // --- Initialization ---
-
         function initBoard() {
-            const layout = [
-                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-                Array(8).fill(null),
-                Array(8).fill(null),
-                Array(8).fill(null),
-                Array(8).fill(null),
-                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
-            ];
+            const layout = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
+            gameState.board = Array(8).fill(null).map(() => Array(8).fill(null));
 
-            gameState.board = [];
-            for (let r = 0; r < 8; r++) {
-                gameState.board[r] = [];
-                for (let c = 0; c < 8; c++) {
-                    let piece = null;
-                    if (r < 2) piece = { type: layout[r][c], color: 'black' };
-                    if (r > 5) piece = { type: layout[7-r][c], color: 'white' };
-                    gameState.board[r][c] = piece;
-                }
+            for (let i = 0; i < 8; i++) {
+                gameState.board[0][i] = { type: layout[i], color: 'black', moved: false };
+                gameState.board[1][i] = { type: 'p', color: 'black', moved: false };
+                gameState.board[6][i] = { type: 'p', color: 'white', moved: false };
+                gameState.board[7][i] = { type: layout[i], color: 'white', moved: false };
             }
             renderBoard();
         }
 
         function renderBoard() {
-            board.innerHTML = '';
+            boardEl.innerHTML = '';
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const sq = document.createElement('div');
@@ -361,42 +391,39 @@
                     sq.dataset.col = c;
                     sq.onclick = () => handleSquareClick(r, c);
 
+                    if (gameState.lastMove && ((gameState.lastMove.sr === r && gameState.lastMove.sc === c) || (gameState.lastMove.dr === r && gameState.lastMove.dc === c))) {
+                        sq.classList.add('last-move');
+                    }
+
                     const piece = gameState.board[r][c];
                     if (piece) {
                         const pDiv = document.createElement('div');
                         pDiv.className = 'piece';
                         pDiv.textContent = PIECES[piece.color][piece.type];
                         pDiv.style.color = piece.color === 'white' ? '#fff' : '#000';
-                        if (piece.color === 'black') {
-                            pDiv.style.textShadow = '0 0 5px rgba(255,255,255,0.3)';
-                        }
+                        if (piece.color === 'black') pDiv.style.textShadow = '0 0 8px rgba(255,255,255,0.4)';
                         sq.appendChild(pDiv);
                     }
-                    board.appendChild(sq);
+                    boardEl.appendChild(sq);
                 }
             }
         }
 
-        // --- Game Logic ---
-
         function handleSquareClick(r, c) {
             if (gameState.isAugmentPhase) return;
-            
-            // Time Stop logic: Only white can move, and only king can move if turns > 0
+
+            // Time Stop: Only white King can move
             if (gameState.timeStopTurns > 0) {
                 if (gameState.turn !== 'white') return;
                 const piece = gameState.board[r][c];
                 if (gameState.selected) {
                     const [sr, sc] = gameState.selected;
-                    const movingPiece = gameState.board[sr][sc];
-                    if (movingPiece.type !== 'k') {
+                    if (gameState.board[sr][sc].type !== 'k') {
                         gameState.selected = null;
                         renderBoard();
                         return;
                     }
-                } else {
-                    if (!piece || piece.color !== 'white' || piece.type !== 'k') return;
-                }
+                } else if (!piece || piece.type !== 'k' || piece.color !== 'white') return;
             }
 
             const piece = gameState.board[r][c];
@@ -410,65 +437,68 @@
                 } else if (piece && piece.color === gameState.turn) {
                     gameState.selected = [r, c];
                 }
-            } else {
-                if (piece && piece.color === gameState.turn) {
-                    gameState.selected = [r, c];
-                }
+            } else if (piece && piece.color === gameState.turn) {
+                gameState.selected = [r, c];
             }
             updateSelectionUI();
         }
 
         function isValidMove(sr, sc, dr, dc) {
-            const piece = gameState.board[sr][sc];
+            const p = gameState.board[sr][sc];
             const target = gameState.board[dr][dc];
-            if (target && target.color === piece.color) return false;
+            if (target && target.color === p.color) return false;
 
             const drDiff = dr - sr;
             const dcDiff = dc - sc;
             const absDr = Math.abs(drDiff);
             const absDc = Math.abs(dcDiff);
 
-            // Time Stop: King can move anywhere (God mode)
-            if (gameState.timeStopTurns > 0 && piece.type === 'k') return true;
+            // Time Stop God Mode for King
+            if (gameState.timeStopTurns > 0 && p.type === 'k') return true;
+            if (hasAugment(p.color, 'necromancy') && p.type === 'k') return false;
 
-            // Necromancy Check
-            if (hasAugment(piece.color, 'necromancy') && piece.type === 'k') return false;
-
-            // Basic Moves
-            switch(piece.type) {
+            switch(p.type) {
                 case 'p':
-                    const dir = (piece.color === 'white' && !hasAugment('white', 'gravity')) || (piece.color === 'black' && hasAugment('black', 'gravity')) ? -1 : 1;
-                    // Normal
-                    if (dc === sc && !target) {
-                        if (dr === sr + dir) return true;
-                        if ((sr === 6 || sr === 1) && dr === sr + 2 * dir && !gameState.board[sr + dir][sc]) return true;
-                    }
+                    const dir = (p.color === 'white' && !hasAugment('white', 'gravity')) || (p.color === 'black' && hasAugment('black', 'gravity')) ? -1 : 1;
+                    // Forward 1
+                    if (dc === sc && dr === sr + dir && !target) return true;
+                    // Forward 2 (First move)
+                    if (dc === sc && dr === sr + 2 * dir && !p.moved && !target && !gameState.board[sr + dir][sc]) return true;
                     // Capture
                     if (absDc === 1 && dr === sr + dir && target) return true;
+                    // En Passant
+                    if (absDc === 1 && dr === sr + dir && !target && gameState.enPassantTarget && gameState.enPassantTarget.r === dr - dir && gameState.enPassantTarget.c === dc) return true;
                     // Evolve Pawn
-                    if (hasAugment(piece.color, 'evolve_pawn') && dr === sr && absDc === 1 && !target) return true;
+                    if (hasAugment(p.color, 'evolve_pawn') && dr === sr && absDc === 1 && !target) return true;
                     break;
                 case 'n':
-                    const isN = (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
-                    if (isN) return true;
-                    if (hasAugment(piece.color, 'super_knight') && (sr === dr || sc === dc) && isPathClear(sr, sc, dr, dc)) return true;
-                    if (hasAugment(piece.color, 'final_knight') && absDr === absDc && isPathClear(sr, sc, dr, dc)) return true;
+                    const normalN = (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
+                    if (normalN) return true;
+                    if (hasAugment(p.color, 'super_knight') && (sr === dr || sc === dc) && isPathClear(sr, sc, dr, dc)) return true;
+                    if (hasAugment(p.color, 'final_knight') && absDr === absDc && isPathClear(sr, sc, dr, dc)) return true;
                     break;
                 case 'b':
-                    if (absDr === absDc && (hasAugment(piece.color, 'sniper_bishop') || isPathClear(sr, sc, dr, dc))) return true;
-                    if (hasAugment(piece.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) return true;
+                    if (hasAugment(p.color, 'khan')) return ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2));
+                    if (absDr === absDc && (hasAugment(p.color, 'sniper_bishop') || isPathClear(sr, sc, dr, dc))) return true;
                     break;
                 case 'r':
-                    if ((sr === dr || sc === dc) && (hasAugment(piece.color, 'meteor_strike') || isPathClear(sr, sc, dr, dc))) return true;
+                    if ((sr === dr || sc === dc) && (hasAugment(p.color, 'meteor_strike') || isPathClear(sr, sc, dr, dc))) return true;
                     break;
                 case 'q':
                     if ((sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
                     break;
                 case 'k':
                     if (absDr <= 1 && absDc <= 1) return true;
-                    if (hasAugment(piece.color, 'king_attack') && absDr === 2 && absDc === 2) return true;
-                    if (hasAugment(piece.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) return true;
-                    if (hasAugment(piece.color, 'real_king') && (sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
+                    if (hasAugment(p.color, 'king_attack') && absDr === 2 && absDc === 2) return true;
+                    if (hasAugment(p.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) return true;
+                    if (hasAugment(p.color, 'real_king') && (sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
+                    // Castling
+                    if (!p.moved && dr === sr && absDc === 2) {
+                        const isKingSide = dc > sc;
+                        const rookC = isKingSide ? 7 : 0;
+                        const rook = gameState.board[sr][rookC];
+                        if (rook && rook.type === 'r' && !rook.moved && isPathClear(sr, sc, sr, rookC)) return true;
+                    }
                     break;
             }
             return false;
@@ -488,61 +518,61 @@
         }
 
         async function executeMove(sr, sc, dr, dc) {
-            const piece = gameState.board[sr][sc];
-            const target = gameState.board[dr][dc];
+            const p = gameState.board[sr][sc];
+            let target = gameState.board[dr][dc];
 
-            // Royal Guard Protection
+            // Royal Guard
             if (target && hasAugment(target.color, 'royal_guard')) {
-                const kingPos = findKing(target.color);
-                if (kingPos && Math.abs(kingPos.r - dr) <= 1 && Math.abs(kingPos.c - dc) <= 1) {
-                    gameState.selected = null;
-                    renderBoard();
-                    return;
-                }
+                const kp = findKing(target.color);
+                if (kp && Math.abs(kp.r - dr) <= 1 && Math.abs(kp.c - dc) <= 1) return;
             }
 
-            // Save history
             gameState.history.push(JSON.parse(JSON.stringify(gameState.board)));
 
-            // Capture logic
-            if (target) {
-                const list = target.color === 'white' ? 'captured-white' : 'captured-black';
-                const capDiv = document.createElement('div');
-                capDiv.textContent = PIECES[target.color][target.type];
-                capDiv.style.fontSize = '1.5rem';
-                document.getElementById(list).appendChild(capDiv);
-                
-                if (target.type === 'k') {
-                    endGame(piece.color);
-                    return;
-                }
+            // En Passant Capture
+            if (p.type === 'p' && !target && sc !== dc) {
+                const capturedPawnR = sr;
+                target = gameState.board[capturedPawnR][dc];
+                gameState.board[capturedPawnR][dc] = null;
             }
 
-            // Uranium Augment
-            if (piece.type === 'b' && hasAugment(piece.color, 'uranium')) {
-                for (let i = -1; i <= 1; i++) {
-                    for (let j = -1; j <= 1; j++) {
-                        const tr = dr + i, tc = dc + j;
-                        if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8) {
-                            const p = gameState.board[tr][tc];
-                            if (p && p.type !== 'k') gameState.board[tr][tc] = null;
-                        }
+            // Castling Move Rook
+            if (p.type === 'k' && Math.abs(sc - dc) === 2) {
+                const isKingSide = dc > sc;
+                const rOldC = isKingSide ? 7 : 0;
+                const rNewC = isKingSide ? 5 : 3;
+                gameState.board[sr][rNewC] = gameState.board[sr][rOldC];
+                gameState.board[sr][rOldC] = null;
+            }
+
+            // Uranium
+            if (p.type === 'b' && hasAugment(p.color, 'uranium')) {
+                for(let i=-1; i<=1; i++) {
+                    for(let j=-1; j<=1; j++) {
+                        const tr = dr+i, tc = dc+j;
+                        if(tr>=0 && tr<8 && tc>=0 && tc<8 && gameState.board[tr][tc]?.type !== 'k') gameState.board[tr][tc] = null;
                     }
                 }
                 gameState.board[sr][sc] = null;
             } else {
-                gameState.board[dr][dc] = piece;
+                gameState.board[dr][dc] = p;
                 gameState.board[sr][sc] = null;
+                p.moved = true;
             }
 
-            // Log
-            const notation = `${piece.type}${String.fromCharCode(97+sc)}${8-sr}→${String.fromCharCode(97+dc)}${8-dr}`;
-            const logItem = document.createElement('div');
-            logItem.textContent = notation;
-            moveLog.prepend(logItem);
+            // Capture logic
+            if (target) {
+                const listId = target.color === 'white' ? 'captured-white' : 'captured-black';
+                const div = document.createElement('div');
+                div.className = 'piece text-2xl inline-block mr-1';
+                div.textContent = PIECES[target.color][target.type];
+                document.getElementById(listId).appendChild(div);
+                if (target.type === 'k') return endGame(p.color);
+            }
 
-            // Finalize Turn
-            gameState.selected = null;
+            // Post-move setup
+            gameState.enPassantTarget = (p.type === 'p' && Math.abs(sr - dr) === 2) ? {r: dr, c: dc} : null;
+            gameState.lastMove = {sr, sc, dr, dc};
             gameState.moveCount++;
 
             if (gameState.timeStopTurns > 0) {
@@ -551,18 +581,18 @@
                 gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
             }
 
-            gameState.turnCount++;
-            
-            // Augment Trigger: 6th move first, then every 4 moves (total turns)
-            if ((gameState.moveCount === 6) || (gameState.moveCount > 6 && (gameState.moveCount - 6) % 4 === 0)) {
+            // Promotion (Auto Queen for simplicity)
+            if (p.type === 'p' && (dr === 0 || dr === 7)) p.type = 'q';
+
+            // Augment check
+            if (gameState.moveCount === 6 || (gameState.moveCount > 6 && (gameState.moveCount - 6) % 4 === 0)) {
                 await startAugmentPhase();
             }
 
             renderBoard();
             updateUI();
+            logMove(p, sr, sc, dr, dc, !!target);
         }
-
-        // --- Augments ---
 
         async function startAugmentPhase() {
             gameState.isAugmentPhase = true;
@@ -581,22 +611,15 @@
                 container.innerHTML = '';
                 overlay.style.display = 'flex';
 
-                let pool = [...AUGMENT_POOL];
-                // Road to Heaven logic
+                let pool = [...AUGMENT_POOL].sort(() => 0.5 - Math.random());
                 if (hasAugment(player, 'heaven')) {
-                    const grav = pool.find(a => a.id === 'gravity');
-                    pool = [grav, ...pool.filter(a => a.id !== 'gravity').sort(() => 0.5 - Math.random()).slice(0, 2)];
-                } else {
-                    pool = pool.sort(() => 0.5 - Math.random()).slice(0, 3);
+                    const grav = AUGMENT_POOL.find(a => a.id === 'gravity');
+                    pool = [grav, ...pool.filter(a => a.id !== 'gravity')];
                 }
-
-                pool.forEach(aug => {
+                pool.slice(0, 3).forEach(aug => {
                     const card = document.createElement('div');
                     card.className = 'augment-card';
-                    card.innerHTML = `
-                        <div class="card-title cinzel">${aug.title}</div>
-                        <div class="card-desc">${aug.desc}</div>
-                    `;
+                    card.innerHTML = `<div class="card-title cinzel">${aug.title}</div><div class="card-desc">${aug.desc}</div>`;
                     card.onclick = async () => {
                         await applyAugment(player, aug);
                         overlay.style.display = 'none';
@@ -607,149 +630,77 @@
             });
         }
 
-        async function applyAugment(player, augment) {
-            // 3s Delay logic
+        async function applyAugment(player, aug) {
+            statusNotif.textContent = `${aug.title} 발동 중...`;
             statusNotif.style.display = 'block';
-            statusNotif.textContent = `${augment.title} 발동 중...`;
             await new Promise(r => setTimeout(r, 3000));
             statusNotif.style.display = 'none';
 
-            gameState.augments[player].push(augment.id);
+            gameState.augments[player].push(aug.id);
             const li = document.createElement('li');
-            li.textContent = `[${player.toUpperCase()}] ${augment.title}`;
-            li.className = player === 'white' ? 'text-white' : 'text-gray-400';
+            li.innerHTML = `<span class="text-[#c5a059] font-bold">[${player[0].toUpperCase()}]</span> ${aug.title}`;
             activeAugmentsList.appendChild(li);
 
-            // Immediate effects
-            if (augment.id === 'frontline') {
-                // Modified Frontline: Based on white pawns, annihilates and pushes forward
-                // Regardless of who picks it, it triggers relative to white's advancement
-                for (let r = 0; r < 8; r++) {
-                    for (let c = 0; c < 8; c++) {
+            if (aug.id === 'frontline') {
+                for(let r=0; r<8; r++) {
+                    for(let c=0; c<8; c++) {
                         const p = gameState.board[r][c];
-                        if (p && p.type === 'p' && p.color === 'white') {
-                            const nr = r - 1;
-                            if (nr >= 0) {
-                                if (gameState.board[nr][c] && gameState.board[nr][c].type !== 'k') {
-                                    gameState.board[nr][c] = null; // Smash pieces
-                                }
-                                if (!gameState.board[nr][c]) {
-                                    gameState.board[nr][c] = p;
-                                    gameState.board[r][c] = null;
-                                }
+                        if(p?.type === 'p' && p?.color === 'white') {
+                            if(r > 0) {
+                                if(gameState.board[r-1][c]?.type !== 'k') gameState.board[r-1][c] = null;
+                                if(!gameState.board[r-1][c]) { gameState.board[r-1][c] = p; gameState.board[r][c] = null; }
                             }
                         }
                     }
                 }
-            } else if (augment.id === 'timestop') {
-                // Time stop: Only white gets the power
+            } else if (aug.id === 'timestop') {
                 gameState.timeStopTurns = 3;
                 gameState.turn = 'white';
-            } else if (augment.id === 'shocking_pawns') {
-                const opponent = player === 'white' ? 'black' : 'white';
-                let targets = [];
-                for(let r=0; r<8; r++) {
-                    for(let c=0; c<8; c++) {
-                        const p = gameState.board[r][c];
-                        if(p && p.color === opponent && p.type !== 'k') targets.push({r,c});
-                    }
-                }
-                targets.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(t => {
-                    gameState.board[t.r][t.c].type = 'p';
-                });
-            } else if (augment.id === 'chess960') {
+            } else if (aug.id === 'shocking_pawns') {
+                const opp = player === 'white' ? 'black' : 'white';
                 let pieces = [];
-                for(let r=0; r<8; r++) {
-                    for(let c=0; c<8; c++) {
-                        const p = gameState.board[r][c];
-                        if(p && p.color === player && p.type !== 'p' && p.type !== 'k') {
-                            pieces.push({...p});
-                            gameState.board[r][c] = null;
-                        }
-                    }
-                }
-                pieces.sort(() => 0.5 - Math.random());
-                let idx = 0;
-                const targetRow = player === 'white' ? 7 : 0;
-                for(let c=0; c<8; c++) {
-                    if(!gameState.board[targetRow][c]) {
-                        gameState.board[targetRow][c] = pieces[idx++];
-                        if(idx >= pieces.length) break;
-                    }
-                }
-            } else if (augment.id === 'necromancy') {
-                // Necromancy: Spawn pawns
-                const king = findKing(player);
-                if (king) {
-                    for (let i = -1; i <= 1; i++) {
-                        for (let j = -1; j <= 1; j++) {
-                            const tr = king.r + i, tc = king.c + j;
-                            if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8 && !gameState.board[tr][tc]) {
-                                gameState.board[tr][tc] = { type: 'p', color: player };
-                            }
-                        }
-                    }
-                }
-            } else if (augment.id === 'colossus') {
-                // Check if no pawns
-                checkColossus(player);
+                for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(gameState.board[r][c]?.color === opp && gameState.board[r][c]?.type !== 'k') pieces.push({r,c});
+                pieces.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(pos => gameState.board[pos.r][pos.c].type = 'p');
             }
-
             renderBoard();
+            updateUI();
         }
 
-        function checkColossus(player) {
-            let hasPawn = false;
-            for(let r=0; r<8; r++) {
-                for(let c=0; c<8; c++) {
-                    if(gameState.board[r][c]?.color === player && gameState.board[r][c]?.type === 'p') hasPawn = true;
-                }
-            }
-            if(!hasPawn && hasAugment(player, 'colossus')) {
-                gameState.board[player === 'white' ? 7 : 0][3] = { type: 'q', color: player };
-            }
+        function changeTheme(theme) {
+            document.body.className = theme;
         }
 
-        // --- Utils ---
-
-        function hasAugment(player, id) {
-            return gameState.augments[player].includes(id);
-        }
-
-        function findKing(color) {
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    if (gameState.board[r][c]?.type === 'k' && gameState.board[r][c]?.color === color) return {r, c};
-                }
-            }
-            return null;
+        function logMove(p, sr, sc, dr, dc, cap) {
+            const row = 8 - dr;
+            const col = String.fromCharCode(97 + dc);
+            const entry = document.createElement('div');
+            entry.className = "flex justify-between border-b border-white/5 pb-1";
+            entry.innerHTML = `<span>${gameState.moveCount}. ${PIECES[p.color][p.type]}</span> <span>${String.fromCharCode(97+sc)}${8-sr}${cap?'x':'-'}${col}${row}</span>`;
+            moveLog.prepend(entry);
         }
 
         function updateUI() {
             turnDisplay.textContent = gameState.turn.toUpperCase();
-            turnDisplay.style.color = gameState.turn === 'white' ? '#fff' : '#aaa';
-            
-            // Check Colossus again
-            checkColossus('white');
-            checkColossus('black');
+            turnDisplay.style.color = gameState.turn === 'white' ? '#fff' : '#c5a059';
         }
 
         function updateSelectionUI() {
-            document.querySelectorAll('.square').forEach(s => {
-                s.classList.remove('selected');
-            });
+            document.querySelectorAll('.square').forEach(s => s.classList.remove('selected'));
             if (gameState.selected) {
                 const [r, c] = gameState.selected;
                 document.querySelector(`[data-row="${r}"][data-col="${c}"]`).classList.add('selected');
             }
         }
 
+        function findKing(color) {
+            for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(gameState.board[r][c]?.type === 'k' && gameState.board[r][c]?.color === color) return {r,c};
+        }
+
         function undo() {
             if (gameState.history.length > 0) {
-                if (gameState.undoUsed > 0 && !hasAugment(gameState.turn === 'white' ? 'black' : 'white', 'undo')) return;
                 gameState.board = gameState.history.pop();
                 gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
-                gameState.undoUsed++;
+                gameState.moveCount--;
                 renderBoard();
                 updateUI();
             }
@@ -758,51 +709,29 @@
         function startGame() {
             document.getElementById('lobby').style.display = 'none';
             gameState.startTime = Date.now();
-            setInterval(updateTimer, 1000);
+            setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const s = (elapsed % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${m}:${s}`;
+            }, 1000);
             initBoard();
         }
 
-        function updateTimer() {
-            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
-            const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const s = (elapsed % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${m}:${s}`;
+        function showEncyclopedia() {
+            const list = AUGMENT_POOL.map(a => `<div class="mb-5 p-3 bg-black/40 border-l-4 border-[#c5a059]"><h4 class="text-[#c5a059] font-bold text-lg">${a.title}</h4><p class="text-gray-400 text-sm mt-1">${a.desc}</p></div>`).join('');
+            const modal = document.createElement('div');
+            modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:3000;display:flex;justify-content:center;align-items:center;padding:20px;";
+            modal.innerHTML = `<div class="sidebar w-full max-w-2xl max-h-[90vh] overflow-hidden"><h2 class="cinzel text-3xl mb-6 text-center text-[#c5a059]">AUGMENT ENCYCLOPEDIA</h2><div class="overflow-y-auto pr-2">${list}</div><button onclick="this.parentElement.parentElement.remove()" class="btn-gold cinzel w-full mt-6 py-3">CLOSE</button></div>`;
+            document.body.appendChild(modal);
         }
 
         function endGame(winner) {
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.background = 'rgba(0,0,0,0.9)';
-            overlay.style.display = 'flex';
-            overlay.style.flexDirection = 'column';
-            overlay.style.justifyContent = 'center';
-            overlay.style.alignItems = 'center';
-            overlay.style.zIndex = '1000';
-            
-            overlay.innerHTML = `
-                <h1 class="cinzel text-6xl text-white mb-8">${winner.toUpperCase()} VICTORIOUS</h1>
-                <button onclick="location.reload()" class="btn-gold cinzel">RETURN TO LOBBY</button>
-            `;
-            document.body.appendChild(overlay);
-            document.getElementById('chess-board').classList.add('shake');
-        }
-
-        function showEncyclopedia() {
-            const list = AUGMENT_POOL.map(a => `<div class="mb-4"><strong class="text-[#c5a059]">${a.title}:</strong> <span class="text-gray-300 text-sm">${a.desc}</span></div>`).join('');
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '50%'; modal.style.left = '50%';
-            modal.style.transform = 'translate(-50%, -50%)';
-            modal.style.width = '80%'; modal.style.maxHeight = '80vh';
-            modal.style.background = '#1a1a20'; modal.style.border = '2px solid #c5a059';
-            modal.style.padding = '30px'; modal.style.zIndex = '300';
-            modal.style.overflowY = 'auto';
-            modal.innerHTML = `<h2 class="cinzel text-3xl mb-6">AUGMENT ENCYCLOPEDIA</h2>${list}<button onclick="this.parentElement.remove()" class="mt-6 bg-gray-700 p-2 w-full">CLOSE</button>`;
-            document.body.appendChild(modal);
+            if (document.getElementById('shake-toggle').checked) boardEl.classList.add('shake-anim');
+            const over = document.createElement('div');
+            over.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:4000;display:flex;flex-direction:column;justify-content:center;align-items:center;";
+            over.innerHTML = `<h1 class="cinzel text-7xl text-[#c5a059] mb-10 font-black">${winner.toUpperCase()} VICTORIOUS</h1><button onclick="location.reload()" class="btn-gold cinzel">BACK TO MENU</button>`;
+            document.body.appendChild(over);
         }
 
     </script>
