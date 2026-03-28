@@ -1,351 +1,679 @@
-import pygame
-import sys
-import copy
-import random
-import math
-import time
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess 2: The Augment Era</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --panel-bg: #2d2d2d;
+            --text-main: #e0e0e0;
+            --accent: #4a90e2;
+            --board-light: #ecf0f1;
+            --board-dark: #95a5a6;
+            --white-piece: #ffffff;
+            --black-piece: #222222;
+        }
 
-# --- 초기 설정 ---
-pygame.init()
+        /* 테마 설정 */
+        .theme-modern { --board-light: #ced4da; --board-dark: #495057; }
+        .theme-wood { --board-light: #f3e5ab; --board-dark: #8b4513; }
+        .theme-sea { --board-light: #a8dadc; --board-dark: #1d3557; }
 
-BOARD_SIZE = 640
-SIDE_WIDTH = 250 
-WIDTH = BOARD_SIZE + SIDE_WIDTH * 2
-HEIGHT = BOARD_SIZE
-CELL = BOARD_SIZE // 8
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("AUGMENT CHESS - Professional Final")
+        /* 레이아웃 구조 */
+        #game-container {
+            display: flex;
+            gap: 20px;
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+        }
 
-# --- 폰트 및 리소스 ---
-def get_font(size, bold=False, is_piece=False):
-    if is_piece:
-        piece_fonts = ["segoeuisymbol", "quivira", "dejavusans", "freeserif", "arial"]
-        for f in piece_fonts:
-            try:
-                found = pygame.font.SysFont(f, size)
-                if found: return found
-            except: continue
-    text_fonts = ["malgungothic", "nanumgothic", "notosansckjkr", "arial"]
-    for f in text_fonts:
-        try:
-            found = pygame.font.SysFont(f, size, bold=bold)
-            if found: return found
-        except: continue
-    return pygame.font.SysFont(None, size)
+        .sidebar {
+            flex: 1;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
-font_piece = get_font(60, is_piece=True)
-font_title = get_font(40, bold=True)
-font_ui = get_font(18, bold=True)
-font_log = get_font(14)
-font_msg = get_font(24, bold=True)
-font_card_title = get_font(20, bold=True)
-font_card_desc = get_font(14)
+        #main-board-area {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-# --- 상수 및 테마 ---
-COLORS = {
-    "Modern Dark": {"white": (230, 233, 235), "black": (70, 85, 95), "bg": (20, 22, 26), "sidebar": (30, 34, 40)},
-    "Classic Wood": {"white": (240, 217, 181), "black": (181, 136, 99), "bg": (46, 30, 20), "sidebar": (65, 43, 30)},
-    "Deep Sea": {"white": (173, 216, 230), "black": (25, 25, 112), "bg": (10, 15, 30), "sidebar": (20, 25, 45)}
-}
+        /* 체스판 */
+        #chess-board {
+            width: 600px;
+            height: 600px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 5px solid #333;
+            position: relative;
+        }
 
-PIECES = {
-    'w_k': '♔', 'w_q': '♕', 'w_r': '♖', 'w_b': '♗', 'w_n': '♘', 'w_p': '♙',
-    'b_k': '♚', 'b_q': '♛', 'b_r': '♜', 'b_b': '♝', 'b_n': '♞', 'b_p': '♟'
-}
+        .square {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
 
-STATE_MENU = 0
-STATE_GAME = 1
-STATE_AUGMENT = 2
-STATE_SETTINGS = 3
-STATE_OVER = 4
+        .square.light { background-color: var(--board-light); }
+        .square.dark { background-color: var(--board-dark); }
+        .square.selected { background-color: #f1c40f !important; }
+        .square.valid { box-shadow: inset 0 0 15px rgba(46, 204, 113, 0.8); }
 
-AUGMENT_POOL = [
-    {"id": "necromancy", "name": "네크로맨시", "desc": "기물을 잡으면 하급 기물로 부활시킵니다."},
-    {"id": "king_attack", "name": "킹스 어택", "desc": "킹이 퀸처럼 움직일 수 있게 됩니다."},
-    {"id": "road_to_heaven", "name": "천국에 가는 길", "desc": "다음 증강에서 반드시 중력이 뒤바뀝니다."},
-    {"id": "gravity_flip", "name": "중력 반전", "desc": "폰이 뒤로도 움직일 수 있게 됩니다."},
-    {"id": "double_step", "name": "기동력 강화", "desc": "모든 기물이 두 칸까지 점프 가능합니다."},
-    {"id": "thorns", "name": "가시 갑옷", "desc": "내 기물을 잡은 상대 기물도 함께 파괴됩니다."},
-]
+        .piece {
+            z-index: 10;
+            transition: transform 0.2s ease;
+        }
 
-# --- 체스 엔진 ---
-class ChessEngine:
-    def __init__(self):
-        self.reset()
+        /* 사이드바 요소 */
+        .info-group { margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        .value { font-size: 1.2rem; font-weight: bold; }
 
-    def reset(self):
-        self.board = [
-            ['b_r','b_n','b_b','b_q','b_k','b_b','b_n','b_r'],
-            ['b_p']*8,
-            [None]*8, [None]*8, [None]*8, [None]*8,
-            ['w_p']*8,
-            ['w_r','w_n','w_b','w_q','w_k','w_b','w_n','w_r']
-        ]
-        self.turn = 'w'
-        self.history = []
-        self.captured = {'w': [], 'b': []}
-        self.move_count = 0
-        self.augments = {'w': set(), 'b': set()}
-        self.heaven_trigger = {'w': False, 'b': False}
+        #move-log {
+            flex-grow: 1;
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
 
-    def get_piece(self, r, c):
-        if 0 <= r < 8 and 0 <= c < 8: return self.board[r][c]
-        return None
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover { filter: brightness(1.2); }
+        button:disabled { background: #555; cursor: not-allowed; }
 
-    def is_valid_move(self, start, end):
-        sr, sc = start
-        er, ec = end
-        piece = self.board[sr][sc]
-        target = self.board[er][ec]
-        if not piece or piece[0] != self.turn: return False
-        if target and target[0] == self.turn: return False
-        dr, dc = er - sr, ec - sc
-        p_type = piece[2:]
-        color = piece[0]
+        /* 팝업 창 (증강 선택) */
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
 
-        if p_type == 'p':
-            direction = -1 if color == 'w' else 1
-            if "gravity_flip" in self.augments[color]:
-                if abs(dr) == 1 and dc == 0 and not target: return True
-            if dr == direction and dc == 0 and not target: return True
-            if (sr == 6 if color == 'w' else sr == 1) and dr == 2*direction and dc == 0 and not target:
-                if not self.board[sr+direction][sc]: return True
-            if dr == direction and abs(dc) == 1 and target: return True
-        elif p_type == 'k':
-            if "king_attack" in self.augments[color]:
-                if dr == 0 or dc == 0 or abs(dr) == abs(dc): return self.is_path_clear(start, end)
-            return abs(dr) <= 1 and abs(dc) <= 1
-        elif p_type == 'n':
-            return (abs(dr), abs(dc)) in [(1,2), (2,1)]
-        elif p_type == 'r':
-            if dr == 0 or dc == 0: return self.is_path_clear(start, end)
-        elif p_type == 'b':
-            if abs(dr) == abs(dc): return self.is_path_clear(start, end)
-        elif p_type == 'q':
-            if dr == 0 or dc == 0 or abs(dr) == abs(dc): return self.is_path_clear(start, end)
+        #augment-modal {
+            background: #333;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            width: 600px;
+        }
 
-        if "double_step" in self.augments[color]:
-            if abs(dr) <= 2 and abs(dc) <= 2:
-                if p_type in ['n', 'k']: return True
-                return self.is_path_clear(start, end)
-        return False
+        .augment-list {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
 
-    def is_path_clear(self, start, end):
-        sr, sc = start
-        er, ec = end
-        dr = 1 if er > sr else (-1 if er < sr else 0)
-        dc = 1 if ec > sc else (-1 if ec < sc else 0)
-        curr_r, curr_c = sr + dr, sc + dc
-        while (curr_r, curr_c) != (er, ec):
-            if self.board[curr_r][curr_c]: return False
-            curr_r += dr
-            curr_c += dc
-        return True
+        .augment-card {
+            flex: 1;
+            background: #444;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .augment-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .augment-card h4 { margin: 10px 0; color: #f1c40f; }
+        .augment-card p { font-size: 0.85rem; line-height: 1.4; }
 
-    def move_piece(self, start, end):
-        sr, sc = start
-        er, ec = end
-        piece = self.board[sr][sc]
-        target = self.board[er][ec]
-        self.history.append({'board': copy.deepcopy(self.board), 'turn': self.turn, 'captured': copy.deepcopy(self.captured), 'move_count': self.move_count})
-        thorns_kill = target and "thorns" in self.augments[target[0]]
-        if target:
-            self.captured[self.turn].append(target)
-        self.board[er][ec] = piece
-        self.board[sr][sc] = None
-        if thorns_kill: self.board[er][ec] = None
-        game_over = target and target[2:] == 'k'
-        self.turn = 'b' if self.turn == 'w' else 'w'
-        self.move_count += 1
-        return game_over
+        /* 화면 흔들림 효과 */
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim {
+            0% { transform: translate(1px, 1px); }
+            10% { transform: translate(-1px, -2px); }
+            20% { transform: translate(-3px, 0px); }
+            30% { transform: translate(3px, 2px); }
+            40% { transform: translate(1px, -1px); }
+            50% { transform: translate(-1px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
 
-    def undo(self):
-        if not self.history: return
-        prev = self.history.pop()
-        self.board = prev['board']
-        self.turn = prev['turn']
-        self.captured = prev['captured']
-        self.move_count = prev['move_count']
+        .red-flash { animation: redFlashAnim 0.5s; }
+        @keyframes redFlashAnim {
+            0% { background-color: rgba(255,0,0,0); }
+            50% { background-color: rgba(255,0,0,0.5); }
+            100% { background-color: rgba(255,0,0,0); }
+        }
+    </style>
+</head>
+<body class="theme-modern">
 
-# --- 메인 애플리케이션 ---
-class GameApp:
-    def __init__(self):
-        self.engine = ChessEngine()
-        self.state = STATE_MENU
-        self.selected = None
-        self.theme_name = "Modern Dark"
-        self.move_log = []
-        self.current_selection = []
-        self.winner = None
-        # 버튼 영역 정의 (정확한 좌표 충돌 판정을 위해)
-        self.buttons = {}
+    <div id="game-container">
+        <!-- 좌측 사이드바: 정보 및 조작 -->
+        <div class="sidebar" id="left-sidebar">
+            <h2 style="color: var(--accent);">CHESS 2</h2>
+            <div class="info-group">
+                <div class="label">CURRENT TURN</div>
+                <div id="turn-display" class="value">WHITE</div>
+            </div>
+            <div class="info-group">
+                <div class="label">GAME TIME</div>
+                <div id="timer-display" class="value">00:00</div>
+            </div>
+            <div class="info-group" style="flex-grow: 1;">
+                <div class="label">ACTIVE AUGMENTS</div>
+                <div id="active-augments" style="margin-top: 10px; font-size: 0.85rem;">
+                    <div style="color: #888;">No active augments</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="undo-btn" style="flex: 1;">UNDO</button>
+                <button id="reset-btn" style="flex: 1; background: #e74c3c;">RESET</button>
+            </div>
+            <button id="settings-btn" style="margin-top: 10px;">SETTINGS</button>
+        </div>
 
-    def draw_button(self, key, text, x, y, w, h):
-        mx, my = pygame.mouse.get_pos()
-        rect = pygame.Rect(x - w//2, y - h//2, w, h)
-        self.buttons[key] = rect
-        color = (60, 65, 75)
-        if rect.collidepoint(mx, my): color = (80, 85, 95)
-        pygame.draw.rect(screen, color, rect, border_radius=5)
-        self.draw_text(text, font_ui, (255, 255, 255), x, y)
+        <!-- 중앙: 체스 보드 -->
+        <div id="main-board-area">
+            <div id="chess-board"></div>
+        </div>
 
-    def draw_text(self, text, font, color, x, y):
-        img = font.render(text, True, color)
-        rect = img.get_rect(center=(x, y))
-        screen.blit(img, rect)
+        <!-- 우측 사이드바: 기보 및 잡은 기물 -->
+        <div class="sidebar" id="right-sidebar">
+            <div class="info-group">
+                <div class="label">CAPTURED PIECES</div>
+                <div id="captured-white" style="font-size: 1.5rem; min-height: 2rem;"></div>
+                <div id="captured-black" style="font-size: 1.5rem; min-height: 2rem;"></div>
+            </div>
+            <div class="label" style="margin-bottom: 5px;">MOVE LOG</div>
+            <div id="move-log"></div>
+        </div>
+    </div>
 
-    def handle_click(self, event):
-        if event.type != pygame.MOUSEBUTTONDOWN: return
-        mx, my = event.pos
+    <!-- 증강 선택 모달 -->
+    <div id="modal-overlay">
+        <div id="augment-modal">
+            <h2 id="modal-title">증강 선택 (백색 차례)</h2>
+            <p>전략을 바꿀 강력한 힘을 선택하십시오.</p>
+            <div class="augment-list" id="augment-choices">
+                <!-- JS에서 생성 -->
+            </div>
+        </div>
+    </div>
 
-        # 공통: 버튼 클릭 판정
-        for key, rect in self.buttons.items():
-            if rect.collidepoint(mx, my):
-                self.process_button(key)
-                return
+    <!-- 설정 모달 (단순 구현) -->
+    <div id="settings-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div style="background:#333; padding:30px; border-radius:15px; width:400px;">
+            <h3>Settings</h3>
+            <label>Board Theme</label><br>
+            <select id="theme-select" style="width:100%; padding:8px; margin:10px 0;">
+                <option value="theme-modern">Modern Dark</option>
+                <option value="theme-wood">Classic Wood</option>
+                <option value="theme-sea">Deep Sea</option>
+            </select><br>
+            <label><input type="checkbox" id="shake-toggle" checked> Shake Effect</label><br>
+            <label><input type="checkbox" id="anim-toggle" checked> Slide Animation</label><br>
+            <button onclick="document.getElementById('settings-overlay').style.display='none'" style="margin-top:20px; width:100%;">CLOSE</button>
+        </div>
+    </div>
 
-        # 인게임 체스판 클릭 판정
-        if self.state == STATE_GAME:
-            board_x = mx - SIDE_WIDTH
-            if 0 <= board_x < BOARD_SIZE and 0 <= my < BOARD_SIZE:
-                c, r = board_x // CELL, my // CELL
-                if self.selected:
-                    if self.engine.is_valid_move(self.selected, (r, c)):
-                        p = self.engine.board[self.selected[0]][self.selected[1]]
-                        self.move_log.append(f"{p[2:].upper()} to {chr(97+c)}{8-r}")
-                        if self.engine.move_piece(self.selected, (r, c)):
-                            self.state = STATE_OVER
-                            self.winner = "WHITE" if self.engine.turn == 'b' else "BLACK"
-                        self.selected = None
-                        if self.engine.move_count > 0 and self.engine.move_count % 8 == 0:
-                            self.prepare_augments()
-                    else:
-                        piece = self.engine.get_piece(r, c)
-                        if piece and piece[0] == self.engine.turn: self.selected = (r, c)
-                        else: self.selected = None
-                else:
-                    piece = self.engine.get_piece(r, c)
-                    if piece and piece[0] == self.engine.turn: self.selected = (r, c)
+    <script>
+        /**
+         * CHESS 2: ENGINE & LOGIC
+         */
+        
+        // --- 상수 및 데이터 ---
+        const PIECES = {
+            wP: '♙', wR: '♖', wN: '♘', wB: '♗', wQ: '♕', wK: '♔',
+            bP: '♟', bR: '♜', bN: '♞', bB: '♝', bQ: '♛', bK: '♚'
+        };
 
-    def process_button(self, key):
-        if key == "START":
-            self.state = STATE_GAME
-            self.engine.reset()
-            self.move_log = []
-        elif key == "SETTINGS": self.state = STATE_SETTINGS
-        elif key == "BACK": self.state = STATE_MENU
-        elif key == "UNDO": self.engine.undo()
-        elif key == "RESET":
-            self.engine.reset()
-            self.state = STATE_MENU
-        elif key.startswith("THEME_"):
-            self.theme_name = key.replace("THEME_", "").replace("_", " ")
-        elif key.startswith("AUG_"):
-            idx = int(key.split("_")[1])
-            aug = self.current_selection[idx]
-            self.engine.augments[self.engine.turn].add(aug["id"])
-            if aug["id"] == "road_to_heaven": self.engine.heaven_trigger[self.engine.turn] = True
-            self.state = STATE_GAME
+        const AUGMENT_POOL = [
+            { id: 'ULTRA_KNIGHT', name: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
+            { id: 'SHOCKING_PAWN', name: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
+            { id: 'TIME_STOP', name: "시간 정지", desc: "3턴간 나만 행동 (킹 전용 무적 이동 가능)" },
+            { id: 'PAWN_EVOLUTION', name: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
+            { id: 'KNIGHT_EVOLUTION', name: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
+            { id: 'SNIPER_BISHOP', name: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
+            { id: 'METEOR_STRIKE', name: "메테오 스트라이크", desc: "룩이 기물을 관통하여 공격" },
+            { id: 'KING_ATTACK', name: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
+            { id: 'NECROMANCY', name: "네크로맨시", desc: "킹 이동 불가, 주변 빈 공간에 폰 소환 가능" },
+            { id: 'GRAVITY_REVERSE', name: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
+            { id: 'ROYAL_GUARD', name: "로열 가드", desc: "킹 주변 8칸 아군은 잡히지 않음" },
+            { id: 'RADIOACTIVE_BISHOP', name: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 삭제 후 사망" },
+            { id: 'KHAN_DESCENDANT', name: "칸의 후예", desc: "비숍이 나이트로 변경. 킹이 나이트 행마 획득" },
+            { id: 'TRUE_KING', name: "진정한 왕은 누구인가?", desc: "퀸 삭제. 킹이 퀸의 행마법 획득" },
+            { id: 'GIANT_SOLDIER', name: "체크메이트의 거신병", desc: "폰 전멸 시 d1(d8)에 퀸 소환" },
+            { id: 'CHESS_960', name: "체스 960", desc: "내 기물 위치 무작위 셔플" },
+            { id: 'ROAD_TO_HEAVEN', name: "천국에 가는 길", desc: "다음 증강 선택 시 '중력 반전' 확정 등장" },
+            { id: 'UNDO_UNLIMITED', name: "Undo!", desc: "되돌리기 무제한 활성화" },
+            { id: 'FRONT_LINE', name: "전방 전선", desc: "모든 폰 1칸 전진" }
+        ];
 
-    def prepare_augments(self):
-        pool = list(AUGMENT_POOL)
-        color = self.engine.turn
-        if self.engine.heaven_trigger[color]:
-            gv = [a for a in pool if a["id"] == "gravity_flip"][0]
-            others = [a for a in pool if a["id"] != "gravity_flip"]
-            self.current_selection = [gv] + random.sample(others, 2)
-            self.engine.heaven_trigger[color] = False
-        else:
-            self.current_selection = random.sample(pool, 3)
-        self.state = STATE_AUGMENT
+        // --- 게임 상태 ---
+        let board = Array(64).fill(null);
+        let turn = 'WHITE'; // 'WHITE' or 'BLACK'
+        let selectedSquare = null;
+        let validMoves = [];
+        let history = [];
+        let moveCount = 0;
+        let whiteAugments = [];
+        let blackAugments = [];
+        let captured = { WHITE: [], BLACK: [] };
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let nextAugmentForce = null; // 천국에 가는 길 트리거
 
-    def draw(self):
-        theme = COLORS[self.theme_name]
-        screen.fill(theme["bg"])
-        self.buttons = {} # 매 프레임 버튼 영역 초기화
+        // --- 초기화 ---
+        function initGame() {
+            // 초기 보드 배치
+            const layout = [
+                'bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR',
+                'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP',
+                null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
+                'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP',
+                'wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'
+            ];
+            board = [...layout];
+            turn = 'WHITE';
+            moveCount = 0;
+            whiteAugments = [];
+            blackAugments = [];
+            captured = { WHITE: [], BLACK: [] };
+            history = [];
+            
+            renderBoard();
+            updateSidebar();
+            startTimer();
+        }
 
-        if self.state == STATE_MENU:
-            self.draw_text("AUGMENT CHESS", font_title, (0, 255, 150), WIDTH//2, HEIGHT//2 - 100)
-            self.draw_button("START", "GAME START", WIDTH//2, HEIGHT//2, 200, 50)
-            self.draw_button("SETTINGS", "SETTINGS", WIDTH//2, HEIGHT//2 + 70, 200, 50)
-            return
+        function startTimer() {
+            if(timerInterval) clearInterval(timerInterval);
+            timerSeconds = 0;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                const secs = (timerSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
 
-        if self.state == STATE_SETTINGS:
-            self.draw_text("SETTINGS", font_title, (255, 255, 255), WIDTH//2, 50)
-            self.draw_text("Select Theme", font_ui, (150, 150, 150), WIDTH//2, 150)
-            self.draw_button("THEME_Modern_Dark", "Modern Dark", WIDTH//2, 220, 200, 40)
-            self.draw_button("THEME_Classic_Wood", "Classic Wood", WIDTH//2, 270, 200, 40)
-            self.draw_button("THEME_Deep_Sea", "Deep Sea", WIDTH//2, 320, 200, 40)
-            self.draw_button("BACK", "[ BACK ]", WIDTH//2, HEIGHT - 50, 150, 40)
-            return
+        // --- 렌더링 ---
+        function renderBoard() {
+            const boardEl = document.getElementById('chess-board');
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 64; i++) {
+                const row = Math.floor(i / 8);
+                const col = i % 8;
+                const square = document.createElement('div');
+                square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                square.dataset.index = i;
 
-        # 사이드바 (좌)
-        pygame.draw.rect(screen, theme["sidebar"], (0, 0, SIDE_WIDTH, HEIGHT))
-        self.draw_text(f"{'WHITE' if self.engine.turn=='w' else 'BLACK'}'s TURN", font_ui, (255, 255, 255), SIDE_WIDTH//2, 50)
-        self.draw_text("ACTIVE AUGMENTS", font_ui, (0, 255, 150), SIDE_WIDTH//2, 150)
-        curr_augs = self.engine.augments['w' if self.engine.turn == 'w' else 'b']
-        for i, aug_id in enumerate(curr_augs):
-            aug_name = next(a["name"] for a in AUGMENT_POOL if a["id"] == aug_id)
-            self.draw_text(f"• {aug_name}", font_log, (200, 200, 200), SIDE_WIDTH//2, 180 + i*20)
-        self.draw_button("UNDO", "UNDO", SIDE_WIDTH//2, 520, 120, 40)
-        self.draw_button("RESET", "RESET", SIDE_WIDTH//2, 570, 120, 40)
+                if (board[i]) {
+                    const piece = document.createElement('span');
+                    piece.className = 'piece';
+                    piece.innerText = PIECES[board[i]];
+                    piece.style.color = board[i].startsWith('w') ? 'var(--white-piece)' : 'var(--black-piece)';
+                    square.appendChild(piece);
+                }
 
-        # 체스판
-        for r in range(8):
-            for c in range(8):
-                rect = (SIDE_WIDTH + c*CELL, r*CELL, CELL, CELL)
-                color = theme["white"] if (r+c)%2 == 0 else theme["black"]
-                pygame.draw.rect(screen, color, rect)
-                if self.selected == (r, c):
-                    pygame.draw.rect(screen, (0, 255, 0), rect, 4)
-                p = self.engine.board[r][c]
-                if p:
-                    p_color = (255, 255, 255) if p[0] == 'w' else (20, 20, 20)
-                    self.draw_text(PIECES[p], font_piece, p_color, SIDE_WIDTH + c*CELL + CELL//2, r*CELL + CELL//2)
+                if (selectedSquare === i) square.classList.add('selected');
+                if (validMoves.includes(i)) square.classList.add('valid');
 
-        # 사이드바 (우)
-        pygame.draw.rect(screen, theme["sidebar"], (WIDTH - SIDE_WIDTH, 0, SIDE_WIDTH, HEIGHT))
-        self.draw_text("HISTORY", font_ui, (255, 255, 255), WIDTH - SIDE_WIDTH//2, 30)
-        for i, log in enumerate(self.move_log[-18:]):
-            self.draw_text(log, font_log, (180, 180, 180), WIDTH - SIDE_WIDTH//2, 60 + i*20)
+                square.onclick = () => handleSquareClick(i);
+                boardEl.appendChild(square);
+            }
+        }
 
-        # 증강 선택 오버레이
-        if self.state == STATE_AUGMENT:
-            s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            s.fill((0, 0, 0, 200))
-            screen.blit(s, (0,0))
-            self.draw_text("SELECT AUGMENT", font_title, (255, 215, 0), WIDTH//2, 80)
-            card_w = 220
-            start_x = (WIDTH - (card_w * 3 + 40)) // 2
-            for i, aug in enumerate(self.current_selection):
-                x = start_x + i*(card_w+20) + card_w//2
-                y = HEIGHT//2
-                self.draw_button(f"AUG_{i}", "SELECT", x, y + 100, 100, 40)
-                # 카드 외형
-                pygame.draw.rect(screen, (0, 255, 150), (x-card_w//2, y-120, card_w, 240), 2, border_radius=10)
-                self.draw_text(aug["name"], font_card_title, (0, 255, 150), x, y - 80)
-                self.draw_text(aug["desc"], font_card_desc, (230, 230, 230), x, y - 30)
+        function updateSidebar() {
+            document.getElementById('turn-display').innerText = turn;
+            document.getElementById('active-augments').innerHTML = `
+                <div style="color:white">WHITE: ${whiteAugments.map(a => a.name).join(', ') || 'None'}</div>
+                <div style="color:white; margin-top:5px;">BLACK: ${blackAugments.map(a => a.name).join(', ') || 'None'}</div>
+            `;
+            document.getElementById('captured-white').innerText = captured.WHITE.map(p => PIECES[p]).join(' ');
+            document.getElementById('captured-black').innerText = captured.BLACK.map(p => PIECES[p]).join(' ');
+        }
 
-        # 게임 종료
-        if self.state == STATE_OVER:
-            s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            s.fill((0, 0, 0, 150))
-            screen.blit(s, (0,0))
-            self.draw_text(f"{self.winner} VICTORY!", font_title, (255, 255, 255), WIDTH//2, HEIGHT//2)
-            self.draw_button("BACK", "MAIN MENU", WIDTH//2, HEIGHT//2 + 80, 200, 50)
+        // --- 이동 로직 ---
+        function handleSquareClick(index) {
+            const piece = board[index];
+            const isMyPiece = piece && (turn === 'WHITE' ? piece.startsWith('w') : piece.startsWith('b'));
 
-# --- 실행부 ---
-if __name__ == "__main__":
-    app = GameApp()
-    clock = pygame.time.Clock()
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT: running = False
-            app.handle_click(event)
-        app.draw()
-        pygame.display.flip()
-        clock.tick(60)
-    pygame.quit()
-    sys.exit()
+            if (selectedSquare === null) {
+                if (isMyPiece) {
+                    selectedSquare = index;
+                    validMoves = calculateValidMoves(index);
+                    renderBoard();
+                }
+            } else {
+                if (validMoves.includes(index)) {
+                    makeMove(selectedSquare, index);
+                } else if (isMyPiece) {
+                    selectedSquare = index;
+                    validMoves = calculateValidMoves(index);
+                    renderBoard();
+                } else {
+                    selectedSquare = null;
+                    validMoves = [];
+                    renderBoard();
+                }
+            }
+        }
+
+        function calculateValidMoves(index) {
+            const piece = board[index];
+            if (!piece) return [];
+            
+            const type = piece[1];
+            const isWhite = piece[0] === 'w';
+            const moves = [];
+            
+            // 기본 이동 로직 (간소화됨)
+            const row = Math.floor(index / 8);
+            const col = index % 8;
+
+            // 증강 확인 로직이 여기에 추가됨
+            const currentAugments = isWhite ? whiteAugments : blackAugments;
+
+            // 예시: 폰 이동
+            if (type === 'P') {
+                const dir = isWhite ? -1 : 1;
+                // 증강: 중력 반전
+                const realDir = currentAugments.find(a => a.id === 'GRAVITY_REVERSE') ? -dir : dir;
+                
+                const nextRow = row + realDir;
+                if (nextRow >= 0 && nextRow < 8 && !board[nextRow * 8 + col]) {
+                    moves.push(nextRow * 8 + col);
+                }
+                
+                // 증강: 졸병 진화 (좌우 이동)
+                if(currentAugments.find(a => a.id === 'PAWN_EVOLUTION')) {
+                    if(col > 0 && !board[row * 8 + col - 1]) moves.push(row * 8 + col - 1);
+                    if(col < 7 && !board[row * 8 + col + 1]) moves.push(row * 8 + col + 1);
+                }
+            }
+
+            // 모든 기물 로직은 증강 조건에 따라 switch/case로 확장 가능
+            // 여기서는 시연을 위해 모든 칸 이동 가능하도록 일부 개방 (개발용)
+            // 실제 구현 시 각 기물별 행마법 함수 호출
+            return getStandardMoves(index, piece, currentAugments);
+        }
+
+        function getStandardMoves(index, piece, augs) {
+            // 기초적인 체스 행마법 (기물별 방향 벡터)
+            const row = Math.floor(index / 8);
+            const col = index % 8;
+            const res = [];
+            const type = piece[1];
+            const color = piece[0];
+
+            const directions = {
+                'R': [[0,1], [0,-1], [1,0], [-1,0]],
+                'B': [[1,1], [1,-1], [-1,1], [-1,-1]],
+                'N': [[2,1], [2,-1], [-2,1], [-2,-1], [1,2], [1,-2], [-1,2], [-1,-2]],
+                'K': [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]],
+                'Q': [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]]
+            };
+
+            let currentDirs = directions[type] || [];
+
+            // 증강 적용: 초살병기 나이트 (N + R)
+            if(type === 'N' && augs.find(a => a.id === 'ULTRA_KNIGHT')) {
+                currentDirs = [...directions['N'], ...directions['R']];
+            }
+            // 증강: 결전병기 나이트 (N + B)
+            if(type === 'N' && augs.find(a => a.id === 'KNIGHT_EVOLUTION')) {
+                currentDirs = [...currentDirs, ...directions['B']];
+            }
+            // 증강: 진정한 왕 (K + Q)
+            if(type === 'K' && augs.find(a => a.id === 'TRUE_KING')) {
+                currentDirs = directions['Q'];
+            }
+
+            // 슬라이딩 기물 처리 (R, B, Q)
+            const sliding = ['R', 'B', 'Q'].includes(type) || 
+                            (type === 'N' && augs.find(a => a.id === 'ULTRA_KNIGHT')) ||
+                            (type === 'K' && augs.find(a => a.id === 'TRUE_KING'));
+
+            currentDirs.forEach(d => {
+                let r = row + d[0], c = col + d[1];
+                while(r >= 0 && r < 8 && c >= 0 && c < 8) {
+                    const targetIdx = r * 8 + c;
+                    const targetPiece = board[targetIdx];
+                    if(!targetPiece) {
+                        res.push(targetIdx);
+                    } else {
+                        if(targetPiece[0] !== color) res.push(targetIdx);
+                        // 증강: 메테오 스트라이크 (관통)
+                        if(type === 'R' && augs.find(a => a.id === 'METEOR_STRIKE')) {
+                           // 관통 로직: 계속 진행
+                        } else {
+                            break; 
+                        }
+                    }
+                    if(!sliding || type === 'N') break;
+                    r += d[0]; c += d[1];
+                }
+            });
+
+            // 폰 기본 공격 및 전진 (간략화)
+            if(type === 'P') {
+                const dir = color === 'w' ? -1 : 1;
+                const forward = (row + dir) * 8 + col;
+                if(!board[forward]) res.push(forward);
+                // 대각선 공격
+                [col-1, col+1].forEach(c => {
+                    if(c >= 0 && c < 8) {
+                        const target = (row+dir)*8 + c;
+                        if(board[target] && board[target][0] !== color) res.push(target);
+                    }
+                });
+            }
+
+            return res;
+        }
+
+        function makeMove(from, to) {
+            const piece = board[from];
+            const target = board[to];
+
+            // 히스토리 저장
+            history.push({ board: [...board], turn, moveCount, captured: { WHITE: [...captured.WHITE], BLACK: [...captured.BLACK] } });
+
+            // 킹 획득 시 게임 오버
+            if(target && target[1] === 'K') {
+                victory(turn);
+            }
+
+            if(target) {
+                captured[turn].push(target);
+            }
+
+            // 기물 이동
+            board[to] = piece;
+            board[from] = null;
+
+            // 기보 기록
+            const log = document.getElementById('move-log');
+            const moveText = `${piece}${String.fromCharCode(97 + (from%8))}${8 - Math.floor(from/8)} → ${String.fromCharCode(97 + (to%8))}${8 - Math.floor(to/8)}`;
+            log.innerHTML = `<div>${moveText}</div>` + log.innerHTML;
+
+            // 상태 초기화
+            selectedSquare = null;
+            validMoves = [];
+            moveCount++;
+
+            // 턴 교체
+            turn = (turn === 'WHITE' ? 'BLACK' : 'WHITE');
+
+            renderBoard();
+            updateSidebar();
+
+            // 증강 발생 체크 (8턴 마다 = 백4수 + 흑4수 완료 시)
+            if(moveCount > 0 && moveCount % 8 === 0) {
+                setTimeout(startAugmentPhase, 500);
+            }
+        }
+
+        // --- 증강 시스템 ---
+        function startAugmentPhase() {
+            showAugmentModal('WHITE');
+        }
+
+        function showAugmentModal(player) {
+            const overlay = document.getElementById('modal-overlay');
+            const title = document.getElementById('modal-title');
+            const container = document.getElementById('augment-choices');
+            
+            title.innerText = `증강 선택 (${player === 'WHITE' ? '백색' : '흑색'} 차례)`;
+            container.innerHTML = '';
+            overlay.style.display = 'flex';
+
+            // 랜덤 3장 추출
+            let pool = [...AUGMENT_POOL];
+            if(nextAugmentForce) {
+                // 천국에 가는 길 효과: 중력 반전 확정 포함
+                const grav = pool.find(a => a.id === 'GRAVITY_REVERSE');
+                pool = pool.filter(a => a.id !== 'GRAVITY_REVERSE');
+                const choices = shuffle(pool).slice(0, 2);
+                choices.push(grav);
+                renderChoices(shuffle(choices), player);
+                nextAugmentForce = null;
+            } else {
+                const choices = shuffle(pool).slice(0, 3);
+                renderChoices(choices, player);
+            }
+        }
+
+        function renderChoices(choices, player) {
+            const container = document.getElementById('augment-choices');
+            choices.forEach(aug => {
+                const card = document.createElement('div');
+                card.className = 'augment-card';
+                card.innerHTML = `<h4>${aug.name}</h4><p>${aug.desc}</p>`;
+                card.onclick = () => selectAugment(aug, player);
+                container.appendChild(card);
+            });
+        }
+
+        function selectAugment(aug, player) {
+            if(player === 'WHITE') {
+                whiteAugments.push(aug);
+                // 백색 선택 완료 후 흑색 선택
+                setTimeout(() => showAugmentModal('BLACK'), 300);
+            } else {
+                blackAugments.push(aug);
+                document.getElementById('modal-overlay').style.display = 'none';
+                applyImmediateEffects(aug, player);
+            }
+            
+            if(aug.id === 'ROAD_TO_HEAVEN') nextAugmentForce = 'GRAVITY_REVERSE';
+            updateSidebar();
+        }
+
+        function applyImmediateEffects(aug, player) {
+            // 즉발형 증강 (체스 960, 전방 전선 등) 처리
+            if(aug.id === 'CHESS_960') {
+                // 1열 기물 셔플 로직 등...
+            }
+            if(aug.id === 'SHOCKING_PAWN') {
+                // 상대 기물 3개 폰으로 변환
+                const oppColor = player === 'WHITE' ? 'b' : 'w';
+                let targets = [];
+                board.forEach((p, i) => { if(p && p.startsWith(oppColor) && p[1] !== 'K') targets.push(i); });
+                shuffle(targets).slice(0, 3).forEach(idx => board[idx] = oppColor + 'P');
+                renderBoard();
+            }
+        }
+
+        // --- 유틸리티 ---
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function victory(winner) {
+            if(document.getElementById('shake-toggle').checked) {
+                document.getElementById('chess-board').classList.add('shake');
+                document.body.classList.add('red-flash');
+                setTimeout(() => {
+                    document.getElementById('chess-board').classList.remove('shake');
+                    document.body.classList.remove('red-flash');
+                }, 500);
+            }
+            setTimeout(() => {
+                alert(`게임 종료! ${winner} 승리!`);
+                initGame();
+            }, 600);
+        }
+
+        // --- 이벤트 리스너 ---
+        document.getElementById('reset-btn').onclick = () => {
+            if(confirm("게임을 초기화하시겠습니까?")) initGame();
+        };
+
+        document.getElementById('undo-btn').onclick = () => {
+            if(history.length > 0) {
+                const last = history.pop();
+                board = last.board;
+                turn = last.turn;
+                moveCount = last.moveCount;
+                captured = last.captured;
+                renderBoard();
+                updateSidebar();
+            }
+        };
+
+        document.getElementById('settings-btn').onclick = () => {
+            document.getElementById('settings-overlay').style.display = 'flex';
+        };
+
+        document.getElementById('theme-select').onchange = (e) => {
+            document.body.className = e.target.value;
+        };
+
+        // 시작
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
