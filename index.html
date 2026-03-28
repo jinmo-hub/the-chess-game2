@@ -34,7 +34,7 @@
         .theme-ocean { --light: #334155; --dark: #0f172a; }
 
         #game-container {
-            display: flex;
+            display: none; /* Initial state */
             height: 100vh;
             padding: 20px;
             gap: 20px;
@@ -63,8 +63,8 @@
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
-            width: 75vh;
-            height: 75vh;
+            width: min(75vh, 80vw);
+            height: min(75vh, 80vw);
             border: 8px solid #222;
             box-shadow: 0 0 60px rgba(0,0,0,0.7);
             position: relative;
@@ -74,10 +74,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 3.8rem;
+            font-size: min(3.5rem, 8vw);
             cursor: pointer;
             position: relative;
-            transition: background 0.2s;
+            transition: background 0.1s;
         }
 
         .square.light { background-color: var(--light); }
@@ -91,58 +91,6 @@
             z-index: 10;
             transition: transform 0.2s ease;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-        }
-
-        /* Augment Modal */
-        #augment-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 500;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .augment-card {
-            width: 260px;
-            height: 380px;
-            background: linear-gradient(145deg, #2a2a35 0%, #0a0a0c 100%);
-            border: 3px solid var(--accent-gold);
-            border-radius: 20px;
-            padding: 25px;
-            margin: 0 15px;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(197, 160, 89, 0.2);
-        }
-
-        .augment-card:hover {
-            transform: translateY(-20px) scale(1.05);
-            box-shadow: 0 0 40px var(--accent-gold);
-        }
-
-        .card-title {
-            color: var(--accent-gold);
-            font-weight: bold;
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.2;
-        }
-
-        .card-desc {
-            font-size: 0.95rem;
-            color: #ddd;
-            line-height: 1.5;
         }
 
         /* Lobby */
@@ -161,12 +109,13 @@
             background: transparent;
             border: 2px solid var(--accent-gold);
             color: var(--accent-gold);
-            padding: 15px 50px;
-            font-size: 1.6rem;
+            padding: 12px 40px;
+            font-size: 1.4rem;
             border-radius: 8px;
             transition: all 0.3s;
-            margin-top: 25px;
             cursor: pointer;
+            width: 320px;
+            text-align: center;
         }
 
         .btn-gold:hover {
@@ -175,45 +124,73 @@
             box-shadow: 0 0 30px var(--accent-gold);
         }
 
-        /* Status Notification */
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--panel-dark);
+            border: 2px solid var(--accent-gold);
+            padding: 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #augment-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1500;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .augment-card {
+            width: 260px;
+            height: 380px;
+            background: linear-gradient(145deg, #2a2a35 0%, #0a0a0c 100%);
+            border: 3px solid var(--accent-gold);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 0 15px;
+            cursor: pointer;
+            transition: all 0.4s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .augment-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 0 40px var(--accent-gold);
+        }
+
         #status-notif {
             position: fixed;
-            top: 15%;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 15%; left: 50%; transform: translateX(-50%);
             background: var(--accent-gold);
             color: black;
             padding: 18px 50px;
             border-radius: 40px;
             font-weight: 800;
             font-size: 1.6rem;
-            z-index: 2000;
+            z-index: 3000;
             display: none;
             box-shadow: 0 0 40px rgba(0,0,0,0.8);
-            border: 2px solid white;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
-
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            font-size: 0.85rem;
-        }
-
-        select {
-            background: #2a2a35;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 4px;
-            padding: 2px 5px;
-            font-size: 0.8rem;
         }
 
         @keyframes shake {
@@ -223,105 +200,157 @@
             75% { transform: translate(-5px, -5px); }
         }
         .shake-anim { animation: shake 0.4s ease-in-out; }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        select, input[type="checkbox"] {
+            accent-color: var(--accent-gold);
+        }
     </style>
 </head>
 <body class="theme-modern">
 
     <div id="status-notif">능력 발동 중...</div>
 
-    <!-- Lobby -->
+    <!-- Lobby Menu -->
     <div id="lobby">
-        <h1 class="cinzel text-7xl mb-4 text-[#c5a059] font-bold">ARGUMENT CHESS</h1>
-        <p class="cinzel text-2xl mb-16 tracking-[0.5em] opacity-80">~ the age of revolution ~</p>
-        <div class="flex flex-col gap-4">
-            <button class="btn-gold cinzel" onclick="startGame()">ENTER THE ARENA</button>
-            <button class="text-gray-500 hover:text-white transition" onclick="showEncyclopedia()">증강 도감 (Encyclopedia)</button>
+        <h1 class="cinzel text-7xl mb-2 text-[#c5a059] font-bold">ARGUMENT CHESS</h1>
+        <p class="cinzel text-xl mb-12 tracking-[0.4em] opacity-60">THE AGE OF REVOLUTION</p>
+        
+        <div class="flex flex-col gap-5">
+            <button class="btn-gold cinzel font-bold" onclick="startGame()">ENTER THE ARENA</button>
+            <button class="btn-gold cinzel font-bold" onclick="openModal('modal-encyclopedia')">ENCYCLOPEDIA</button>
+            <button class="btn-gold cinzel font-bold" onclick="openModal('modal-settings')">SETTINGS</button>
         </div>
     </div>
 
-    <!-- Augment Overlay -->
-    <div id="augment-overlay">
-        <h2 id="augment-player-turn" class="cinzel text-5xl text-white mb-14 font-bold">WHITE PLAYER SELECT</h2>
-        <div class="flex" id="augment-cards-container"></div>
-    </div>
-
-    <div id="game-container">
-        <!-- Left Sidebar: Status & Settings -->
-        <div class="sidebar">
-            <h2 class="cinzel text-2xl text-center mb-6 border-b-2 border-[#c5a059] pb-2 text-[#c5a059]">STATUS</h2>
-            <div class="space-y-4 mb-8">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-bold">TURN</span>
-                    <span id="turn-display" class="font-black text-xl text-white">WHITE</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 font-bold">TIMER</span>
-                    <span id="timer-display" class="font-mono text-xl text-white">00:00</span>
-                </div>
-            </div>
-
-            <h3 class="text-sm font-bold text-[#c5a059] mb-3 uppercase tracking-tighter">Active Augments</h3>
-            <div class="flex-1 overflow-y-auto mb-6 bg-black/30 p-2 rounded border border-[#333]">
-                <ul id="active-augments" class="text-[0.7rem] space-y-2"></ul>
-            </div>
-
-            <h3 class="text-sm font-bold text-[#c5a059] mb-3 uppercase tracking-tighter">Settings</h3>
-            <div class="bg-black/20 p-3 rounded border border-[#333] mb-6">
-                <div class="setting-item">
-                    <span>Board Theme</span>
-                    <select id="theme-select" onchange="changeTheme(this.value)">
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="modal-overlay" onclick="closeModal(event, 'modal-settings')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="cinzel text-3xl text-[#c5a059] mb-6 text-center">SYSTEM SETTINGS</h2>
+            <div class="space-y-2">
+                <div class="setting-row">
+                    <span class="font-bold text-gray-300">BOARD THEME</span>
+                    <select id="theme-select" onchange="changeTheme(this.value)" class="bg-[#2a2a35] p-2 border border-[#444] rounded text-sm">
                         <option value="theme-modern">Modern Dark</option>
                         <option value="theme-wood">Classic Wood</option>
                         <option value="theme-ocean">Deep Sea</option>
                     </select>
                 </div>
-                <div class="setting-item">
-                    <span>Shake Effect</span>
-                    <input type="checkbox" id="shake-toggle" checked>
+                <div class="setting-row">
+                    <span class="font-bold text-gray-300">SCREEN SHAKE</span>
+                    <input type="checkbox" id="shake-toggle" checked class="w-5 h-5">
+                </div>
+                <div class="setting-row">
+                    <span class="font-bold text-gray-300">ANIMATION SPEED</span>
+                    <select class="bg-[#2a2a35] p-2 border border-[#444] rounded text-sm">
+                        <option>Normal</option>
+                        <option>Fast</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-gold cinzel w-full mt-8 py-2 text-lg" onclick="document.getElementById('modal-settings').style.display='none'">APPLY & CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Encyclopedia Modal -->
+    <div id="modal-encyclopedia" class="modal-overlay" onclick="closeModal(event, 'modal-encyclopedia')">
+        <div class="modal-content max-w-3xl" onclick="event.stopPropagation()">
+            <h2 class="cinzel text-3xl text-[#c5a059] mb-8 text-center">AUGMENT ENCYCLOPEDIA</h2>
+            <div id="encyclopedia-list" class="space-y-4"></div>
+            <button class="btn-gold cinzel w-full mt-8 py-2 text-lg" onclick="document.getElementById('modal-encyclopedia').style.display='none'">BACK</button>
+        </div>
+    </div>
+
+    <!-- Augment Selection Overlay -->
+    <div id="augment-overlay">
+        <h2 id="augment-player-turn" class="cinzel text-5xl text-white mb-14 font-bold">WHITE PLAYER SELECT</h2>
+        <div class="flex" id="augment-cards-container"></div>
+    </div>
+
+    <!-- Main Game UI -->
+    <div id="game-container">
+        <!-- Sidebar Left -->
+        <div class="sidebar">
+            <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#c5a059] pb-2 text-[#c5a059]">STATUS</h2>
+            <div class="space-y-5 mb-8">
+                <div class="flex justify-between items-center bg-black/20 p-3 rounded">
+                    <span class="text-xs text-gray-500 font-bold uppercase">Current Turn</span>
+                    <span id="turn-display" class="font-black text-xl text-white">WHITE</span>
+                </div>
+                <div class="flex justify-between items-center bg-black/20 p-3 rounded">
+                    <span class="text-xs text-gray-500 font-bold uppercase">Time</span>
+                    <span id="timer-display" class="font-mono text-xl text-white">00:00</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-2">
-                <button onclick="showEncyclopedia()" class="bg-[#c5a059]/20 hover:bg-[#c5a059]/40 border border-[#c5a059] p-2 rounded text-xs font-bold transition">AUGMENT ENCYCLOPEDIA</button>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-2 rounded text-xs font-bold transition">UNDO</button>
-                    <button onclick="location.reload()" class="bg-red-900/50 hover:bg-red-900 border border-red-700 p-2 rounded text-xs font-bold transition text-white">RESET</button>
-                </div>
+            <h3 class="text-xs font-bold text-[#c5a059] mb-3 uppercase tracking-widest">Active Augments</h3>
+            <div class="flex-1 overflow-y-auto mb-6 bg-black/40 p-3 rounded border border-[#333]">
+                <ul id="active-augments" class="text-[0.7rem] space-y-2"></ul>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mt-auto">
+                <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-3 rounded text-xs font-bold transition">UNDO</button>
+                <button onclick="location.reload()" class="bg-red-950/50 hover:bg-red-800 border border-red-900 p-3 rounded text-xs font-bold transition">EXIT</button>
             </div>
         </div>
 
-        <!-- Center: Board -->
+        <!-- Chess Board -->
         <div id="board-wrapper">
             <div id="chess-board"></div>
         </div>
 
-        <!-- Right Sidebar: Logs & Captures -->
+        <!-- Sidebar Right -->
         <div class="sidebar">
-            <h2 class="cinzel text-2xl text-center mb-6 border-b-2 border-[#c5a059] pb-2 text-[#c5a059]">HISTORY</h2>
-            <div id="move-log" class="flex-1 overflow-y-auto text-[0.75rem] space-y-1 font-mono text-gray-400 p-2 bg-black/30 rounded border border-[#333] mb-6">
-                <div class="text-center opacity-30 mt-10 italic">No moves yet...</div>
-            </div>
+            <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#c5a059] pb-2 text-[#c5a059]">HISTORY</h2>
+            <div id="move-log" class="flex-1 overflow-y-auto text-[0.8rem] space-y-1 font-mono text-gray-400 p-3 bg-black/40 rounded border border-[#333] mb-6"></div>
             
             <div class="space-y-4">
                 <div>
-                    <h3 class="text-[0.65rem] text-gray-500 font-bold mb-2 uppercase">Captured by Black</h3>
-                    <div id="captured-white" class="captured-container min-h-[50px] bg-black/20 p-2 rounded border border-[#333]"></div>
+                    <h3 class="text-[0.6rem] text-gray-500 font-bold mb-2 uppercase tracking-widest">Captured by Black</h3>
+                    <div id="captured-white" class="flex flex-wrap min-h-[40px] bg-black/20 p-2 rounded"></div>
                 </div>
                 <div>
-                    <h3 class="text-[0.65rem] text-gray-500 font-bold mb-2 uppercase">Captured by White</h3>
-                    <div id="captured-black" class="captured-container min-h-[50px] bg-black/20 p-2 rounded border border-[#333]"></div>
+                    <h3 class="text-[0.6rem] text-gray-500 font-bold mb-2 uppercase tracking-widest">Captured by White</h3>
+                    <div id="captured-black" class="flex flex-wrap min-h-[40px] bg-black/20 p-2 rounded"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const boardEl = document.getElementById('chess-board');
-        const turnDisplay = document.getElementById('turn-display');
-        const timerDisplay = document.getElementById('timer-display');
-        const moveLog = document.getElementById('move-log');
-        const activeAugmentsList = document.getElementById('active-augments');
-        const statusNotif = document.getElementById('status-notif');
+        const PIECES = {
+            white: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+            black: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+        };
+
+        const AUGMENT_POOL = [
+            { id: 'uranium', title: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 1칸 기물 삭제(킹 제외) 후 비숍 사망" },
+            { id: 'khan', title: "칸의 후예", desc: "비숍이 나이트로 변경. 킹이 나이트의 행마법 획득" },
+            { id: 'real_king', title: "진정한 왕은 누구인가?", desc: "퀸 삭제. 킹이 퀸의 행마법 획득" },
+            { id: 'colossus', title: "체크메이트의 거신병", desc: "내 모든 폰 전멸 시 d열 1행에 퀸 소환" },
+            { id: 'chess960', title: "체스 960", desc: "내 기물(폰/킹 제외)의 위치를 무작위로 뒤섞음" },
+            { id: 'heaven', title: "천국에 가는 길", desc: "다음 증강 선택 시 확정으로 '중력 반전' 등장" },
+            { id: 'undo', title: "Undo!", desc: "되돌리기 무제한 활성화" },
+            { id: 'frontline', title: "전방 전선", desc: "모든 폰 1칸 전진 (킹 제외한 기물 파괴하며 전진)" },
+            { id: 'super_knight', title: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
+            { id: 'shocking_pawns', title: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
+            { id: 'timestop', title: "시간 정지", desc: "3턴간 나만 행동 (킹 전용 무적 이동 가능)" },
+            { id: 'evolve_pawn', title: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
+            { id: 'final_knight', title: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
+            { id: 'sniper_bishop', title: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
+            { id: 'meteor_strike', title: "메테오 스트라이크", desc: "룩이 기물을 관통하여 공격" },
+            { id: 'king_attack', title: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
+            { id: 'necromancy', title: "네크로맨시", desc: "킹 이동 불가, 대신 주변 빈 공간에 폰 소환 가능" },
+            { id: 'gravity', title: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
+            { id: 'royal_guard', title: "로열 가드", desc: "킹 주변 8칸의 아군은 잡히지 않음" }
+        ];
 
         let gameState = {
             board: [],
@@ -333,40 +362,9 @@
             moveCount: 0,
             isAugmentPhase: false,
             timeStopTurns: 0,
-            lastMove: null, // For highlighting and en passant
-            enPassantTarget: null,
-            castling: {
-                white: { kingSide: true, queenSide: true },
-                black: { kingSide: true, queenSide: true }
-            }
+            lastMove: null,
+            enPassantTarget: null
         };
-
-        const PIECES = {
-            white: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
-            black: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
-        };
-
-        const AUGMENT_POOL = [
-            { id: 'uranium', title: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 1칸 적/아군 삭제(킹 제외) 후 비숍 사망" },
-            { id: 'khan', title: "칸의 후예", desc: "비숍이 나이트로 변경. 킹이 나이트의 행마법 획득" },
-            { id: 'real_king', title: "진정한 왕은 누구인가?", desc: "퀸 삭제. 킹이 퀸의 행마법 획득" },
-            { id: 'colossus', title: "체크메이트의 거신병", desc: "내 모든 폰 전멸 시 d열 1행에 퀸 소환" },
-            { id: 'chess960', title: "체스 960", desc: "내 기물(폰/킹 제외)의 위치를 무작위로 뒤섞음" },
-            { id: 'heaven', title: "천국에 가는 길", desc: "다음 증강 선택 시 확정으로 '중력 반전' 등장" },
-            { id: 'undo', title: "Undo!", desc: "되돌리기 무제한 활성화" },
-            { id: 'frontline', title: "전방 전선", desc: "화이트 폰 전선을 기준으로 모든 기물 파괴(킹 제외) 및 전진" },
-            { id: 'super_knight', title: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
-            { id: 'shocking_pawns', title: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
-            { id: 'timestop', title: "시간 정지", desc: "3턴간 화이트만 행동 가능 (킹 전용 무적 이동 가능)" },
-            { id: 'evolve_pawn', title: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
-            { id: 'final_knight', title: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
-            { id: 'sniper_bishop', title: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
-            { id: 'meteor_strike', title: "메테오 스트라이크", desc: "룩이 기물을 관통하여 공격" },
-            { id: 'king_attack', title: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
-            { id: 'necromancy', title: "네크로맨시", desc: "킹 이동 불가, 주변 빈 공간에 폰 소환 가능" },
-            { id: 'gravity', title: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
-            { id: 'royal_guard', title: "로열 가드", desc: "킹 주변 아군은 잡히지 않음" }
-        ];
 
         function initBoard() {
             const layout = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
@@ -381,52 +379,52 @@
             renderBoard();
         }
 
+        // 보드가 깨지는 현상을 방지하기 위해 innerHTML을 한 번에 생성하여 교체
         function renderBoard() {
-            boardEl.innerHTML = '';
+            const boardEl = document.getElementById('chess-board');
+            let boardHtml = '';
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const sq = document.createElement('div');
-                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    sq.dataset.row = r;
-                    sq.dataset.col = c;
-                    sq.onclick = () => handleSquareClick(r, c);
-
-                    if (gameState.lastMove && ((gameState.lastMove.sr === r && gameState.lastMove.sc === c) || (gameState.lastMove.dr === r && gameState.lastMove.dc === c))) {
-                        sq.classList.add('last-move');
-                    }
-
+                    const isLight = (r + c) % 2 === 0;
                     const piece = gameState.board[r][c];
-                    if (piece) {
-                        const pDiv = document.createElement('div');
-                        pDiv.className = 'piece';
-                        pDiv.textContent = PIECES[piece.color][piece.type];
-                        pDiv.style.color = piece.color === 'white' ? '#fff' : '#000';
-                        if (piece.color === 'black') pDiv.style.textShadow = '0 0 8px rgba(255,255,255,0.4)';
-                        sq.appendChild(pDiv);
+                    let squareClass = `square ${isLight ? 'light' : 'dark'}`;
+                    
+                    if (gameState.selected && gameState.selected[0] === r && gameState.selected[1] === c) squareClass += ' selected';
+                    if (gameState.lastMove && ((gameState.lastMove.sr === r && gameState.lastMove.sc === c) || (gameState.lastMove.dr === r && gameState.lastMove.dc === c))) {
+                        squareClass += ' last-move';
                     }
-                    boardEl.appendChild(sq);
+
+                    let pieceHtml = '';
+                    if (piece) {
+                        const colorStyle = piece.color === 'white' ? 'color:#fff;' : 'color:#000;text-shadow:0 0 5px rgba(255,255,255,0.3);';
+                        pieceHtml = `<div class="piece" style="${colorStyle}">${PIECES[piece.color][piece.type]}</div>`;
+                    }
+
+                    boardHtml += `<div class="${squareClass}" data-row="${r}" data-col="${c}" onclick="handleSquareClick(${r}, ${c})">${pieceHtml}</div>`;
                 }
             }
+            boardEl.innerHTML = boardHtml;
         }
 
         function handleSquareClick(r, c) {
             if (gameState.isAugmentPhase) return;
 
-            // Time Stop: Only white King can move
-            if (gameState.timeStopTurns > 0) {
-                if (gameState.turn !== 'white') return;
-                const piece = gameState.board[r][c];
+            const piece = gameState.board[r][c];
+
+            // Time Stop logic
+            if (gameState.timeStopTurns > 0 && gameState.turn === 'white') {
                 if (gameState.selected) {
                     const [sr, sc] = gameState.selected;
-                    if (gameState.board[sr][sc].type !== 'k') {
-                        gameState.selected = null;
-                        renderBoard();
+                    if (gameState.board[sr][sc].type === 'k' && isValidMove(sr, sc, r, c)) {
+                        executeMove(sr, sc, r, c);
                         return;
                     }
-                } else if (!piece || piece.type !== 'k' || piece.color !== 'white') return;
+                } else if (piece && piece.type === 'k' && piece.color === 'white') {
+                    gameState.selected = [r, c];
+                    renderBoard();
+                    return;
+                }
             }
-
-            const piece = gameState.board[r][c];
 
             if (gameState.selected) {
                 const [sr, sc] = gameState.selected;
@@ -434,13 +432,14 @@
                     gameState.selected = null;
                 } else if (isValidMove(sr, sc, r, c)) {
                     executeMove(sr, sc, r, c);
+                    return;
                 } else if (piece && piece.color === gameState.turn) {
                     gameState.selected = [r, c];
                 }
             } else if (piece && piece.color === gameState.turn) {
                 gameState.selected = [r, c];
             }
-            updateSelectionUI();
+            renderBoard();
         }
 
         function isValidMove(sr, sc, dr, dc) {
@@ -453,22 +452,16 @@
             const absDr = Math.abs(drDiff);
             const absDc = Math.abs(dcDiff);
 
-            // Time Stop God Mode for King
-            if (gameState.timeStopTurns > 0 && p.type === 'k') return true;
+            if (gameState.timeStopTurns > 0 && p.type === 'k' && p.color === 'white') return true;
             if (hasAugment(p.color, 'necromancy') && p.type === 'k') return false;
 
             switch(p.type) {
                 case 'p':
                     const dir = (p.color === 'white' && !hasAugment('white', 'gravity')) || (p.color === 'black' && hasAugment('black', 'gravity')) ? -1 : 1;
-                    // Forward 1
                     if (dc === sc && dr === sr + dir && !target) return true;
-                    // Forward 2 (First move)
                     if (dc === sc && dr === sr + 2 * dir && !p.moved && !target && !gameState.board[sr + dir][sc]) return true;
-                    // Capture
                     if (absDc === 1 && dr === sr + dir && target) return true;
-                    // En Passant
                     if (absDc === 1 && dr === sr + dir && !target && gameState.enPassantTarget && gameState.enPassantTarget.r === dr - dir && gameState.enPassantTarget.c === dc) return true;
-                    // Evolve Pawn
                     if (hasAugment(p.color, 'evolve_pawn') && dr === sr && absDc === 1 && !target) return true;
                     break;
                 case 'n':
@@ -524,16 +517,19 @@
             // Royal Guard
             if (target && hasAugment(target.color, 'royal_guard')) {
                 const kp = findKing(target.color);
-                if (kp && Math.abs(kp.r - dr) <= 1 && Math.abs(kp.c - dc) <= 1) return;
+                if (kp && Math.abs(kp.r - dr) <= 1 && Math.abs(kp.c - dc) <= 1) {
+                    gameState.selected = null;
+                    renderBoard();
+                    return;
+                }
             }
 
             gameState.history.push(JSON.parse(JSON.stringify(gameState.board)));
 
             // En Passant Capture
             if (p.type === 'p' && !target && sc !== dc) {
-                const capturedPawnR = sr;
-                target = gameState.board[capturedPawnR][dc];
-                gameState.board[capturedPawnR][dc] = null;
+                target = gameState.board[sr][dc];
+                gameState.board[sr][dc] = null;
             }
 
             // Castling Move Rook
@@ -543,6 +539,7 @@
                 const rNewC = isKingSide ? 5 : 3;
                 gameState.board[sr][rNewC] = gameState.board[sr][rOldC];
                 gameState.board[sr][rOldC] = null;
+                gameState.board[sr][rNewC].moved = true;
             }
 
             // Uranium
@@ -560,20 +557,19 @@
                 p.moved = true;
             }
 
-            // Capture logic
             if (target) {
                 const listId = target.color === 'white' ? 'captured-white' : 'captured-black';
-                const div = document.createElement('div');
-                div.className = 'piece text-2xl inline-block mr-1';
-                div.textContent = PIECES[target.color][target.type];
-                document.getElementById(listId).appendChild(div);
+                const el = document.createElement('span');
+                el.className = 'text-2xl';
+                el.textContent = PIECES[target.color][target.type];
+                document.getElementById(listId).appendChild(el);
                 if (target.type === 'k') return endGame(p.color);
             }
 
-            // Post-move setup
             gameState.enPassantTarget = (p.type === 'p' && Math.abs(sr - dr) === 2) ? {r: dr, c: dc} : null;
             gameState.lastMove = {sr, sc, dr, dc};
             gameState.moveCount++;
+            gameState.selected = null;
 
             if (gameState.timeStopTurns > 0) {
                 gameState.timeStopTurns--;
@@ -581,10 +577,9 @@
                 gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
             }
 
-            // Promotion (Auto Queen for simplicity)
             if (p.type === 'p' && (dr === 0 || dr === 7)) p.type = 'q';
 
-            // Augment check
+            // Augment Trigger
             if (gameState.moveCount === 6 || (gameState.moveCount > 6 && (gameState.moveCount - 6) % 4 === 0)) {
                 await startAugmentPhase();
             }
@@ -616,10 +611,11 @@
                     const grav = AUGMENT_POOL.find(a => a.id === 'gravity');
                     pool = [grav, ...pool.filter(a => a.id !== 'gravity')];
                 }
+                
                 pool.slice(0, 3).forEach(aug => {
                     const card = document.createElement('div');
                     card.className = 'augment-card';
-                    card.innerHTML = `<div class="card-title cinzel">${aug.title}</div><div class="card-desc">${aug.desc}</div>`;
+                    card.innerHTML = `<div class="card-title cinzel text-xl text-[#c5a059] font-bold mt-10 mb-4 h-20 flex items-center">${aug.title}</div><div class="card-desc text-sm opacity-80">${aug.desc}</div>`;
                     card.onclick = async () => {
                         await applyAugment(player, aug);
                         overlay.style.display = 'none';
@@ -631,24 +627,27 @@
         }
 
         async function applyAugment(player, aug) {
-            statusNotif.textContent = `${aug.title} 발동 중...`;
+            statusNotif.textContent = `${aug.title} 활성화!`;
             statusNotif.style.display = 'block';
-            await new Promise(r => setTimeout(r, 3000));
+            await new Promise(r => setTimeout(r, 1500));
             statusNotif.style.display = 'none';
 
             gameState.augments[player].push(aug.id);
             const li = document.createElement('li');
             li.innerHTML = `<span class="text-[#c5a059] font-bold">[${player[0].toUpperCase()}]</span> ${aug.title}`;
-            activeAugmentsList.appendChild(li);
+            document.getElementById('active-augments').appendChild(li);
 
+            // Special Immediate Effects
             if (aug.id === 'frontline') {
                 for(let r=0; r<8; r++) {
                     for(let c=0; c<8; c++) {
                         const p = gameState.board[r][c];
-                        if(p?.type === 'p' && p?.color === 'white') {
-                            if(r > 0) {
-                                if(gameState.board[r-1][c]?.type !== 'k') gameState.board[r-1][c] = null;
-                                if(!gameState.board[r-1][c]) { gameState.board[r-1][c] = p; gameState.board[r][c] = null; }
+                        if(p?.type === 'p' && p?.color === player) {
+                            const dir = player === 'white' ? -1 : 1;
+                            const nr = r + dir;
+                            if(nr >= 0 && nr < 8) {
+                                if(gameState.board[nr][c]?.type !== 'k') gameState.board[nr][c] = null;
+                                if(!gameState.board[nr][c]) { gameState.board[nr][c] = p; gameState.board[r][c] = null; }
                             }
                         }
                     }
@@ -663,33 +662,46 @@
                 pieces.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(pos => gameState.board[pos.r][pos.c].type = 'p');
             }
             renderBoard();
-            updateUI();
         }
 
-        function changeTheme(theme) {
-            document.body.className = theme;
+        function hasAugment(color, id) { return gameState.augments[color].includes(id); }
+
+        function startGame() {
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            gameState.startTime = Date.now();
+            setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const s = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').textContent = `${m}:${s}`;
+            }, 1000);
+            initBoard();
         }
 
-        function logMove(p, sr, sc, dr, dc, cap) {
-            const row = 8 - dr;
-            const col = String.fromCharCode(97 + dc);
-            const entry = document.createElement('div');
-            entry.className = "flex justify-between border-b border-white/5 pb-1";
-            entry.innerHTML = `<span>${gameState.moveCount}. ${PIECES[p.color][p.type]}</span> <span>${String.fromCharCode(97+sc)}${8-sr}${cap?'x':'-'}${col}${row}</span>`;
-            moveLog.prepend(entry);
+        function changeTheme(theme) { document.body.className = theme; }
+
+        function openModal(id) {
+            if (id === 'modal-encyclopedia') {
+                const list = AUGMENT_POOL.map(a => `<div class="p-4 bg-black/40 border-l-4 border-[#c5a059]"><h4 class="text-[#c5a059] font-bold text-lg">${a.title}</h4><p class="text-gray-400 text-sm mt-1">${a.desc}</p></div>`).join('');
+                document.getElementById('encyclopedia-list').innerHTML = list;
+            }
+            document.getElementById(id).style.display = 'flex';
         }
+
+        function closeModal(e, id) { if(e.target === document.getElementById(id)) document.getElementById(id).style.display = 'none'; }
 
         function updateUI() {
+            const turnDisplay = document.getElementById('turn-display');
             turnDisplay.textContent = gameState.turn.toUpperCase();
             turnDisplay.style.color = gameState.turn === 'white' ? '#fff' : '#c5a059';
         }
 
-        function updateSelectionUI() {
-            document.querySelectorAll('.square').forEach(s => s.classList.remove('selected'));
-            if (gameState.selected) {
-                const [r, c] = gameState.selected;
-                document.querySelector(`[data-row="${r}"][data-col="${c}"]`).classList.add('selected');
-            }
+        function logMove(p, sr, sc, dr, dc, cap) {
+            const entry = document.createElement('div');
+            entry.className = "flex justify-between border-b border-white/5 pb-1";
+            entry.innerHTML = `<span>${gameState.moveCount}. ${PIECES[p.color][p.type]}</span> <span>${String.fromCharCode(97+sc)}${8-sr}${cap?'x':'-'}${String.fromCharCode(97+dc)}${8-dr}</span>`;
+            document.getElementById('move-log').prepend(entry);
         }
 
         function findKing(color) {
@@ -706,34 +718,15 @@
             }
         }
 
-        function startGame() {
-            document.getElementById('lobby').style.display = 'none';
-            gameState.startTime = Date.now();
-            setInterval(() => {
-                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
-                const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-                const s = (elapsed % 60).toString().padStart(2, '0');
-                timerDisplay.textContent = `${m}:${s}`;
-            }, 1000);
-            initBoard();
-        }
-
-        function showEncyclopedia() {
-            const list = AUGMENT_POOL.map(a => `<div class="mb-5 p-3 bg-black/40 border-l-4 border-[#c5a059]"><h4 class="text-[#c5a059] font-bold text-lg">${a.title}</h4><p class="text-gray-400 text-sm mt-1">${a.desc}</p></div>`).join('');
-            const modal = document.createElement('div');
-            modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:3000;display:flex;justify-content:center;align-items:center;padding:20px;";
-            modal.innerHTML = `<div class="sidebar w-full max-w-2xl max-h-[90vh] overflow-hidden"><h2 class="cinzel text-3xl mb-6 text-center text-[#c5a059]">AUGMENT ENCYCLOPEDIA</h2><div class="overflow-y-auto pr-2">${list}</div><button onclick="this.parentElement.parentElement.remove()" class="btn-gold cinzel w-full mt-6 py-3">CLOSE</button></div>`;
-            document.body.appendChild(modal);
-        }
-
         function endGame(winner) {
-            if (document.getElementById('shake-toggle').checked) boardEl.classList.add('shake-anim');
-            const over = document.createElement('div');
-            over.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:4000;display:flex;flex-direction:column;justify-content:center;align-items:center;";
-            over.innerHTML = `<h1 class="cinzel text-7xl text-[#c5a059] mb-10 font-black">${winner.toUpperCase()} VICTORIOUS</h1><button onclick="location.reload()" class="btn-gold cinzel">BACK TO MENU</button>`;
-            document.body.appendChild(over);
+            if (document.getElementById('shake-toggle').checked) document.getElementById('chess-board').classList.add('shake-anim');
+            setTimeout(() => {
+                const over = document.createElement('div');
+                over.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:4000;display:flex;flex-direction:column;justify-content:center;align-items:center;";
+                over.innerHTML = `<h1 class="cinzel text-7xl text-[#c5a059] mb-10 font-black">${winner.toUpperCase()} VICTORIOUS</h1><button onclick="location.reload()" class="btn-gold cinzel">RETURN TO MENU</button>`;
+                document.body.appendChild(over);
+            }, 500);
         }
-
     </script>
 </body>
 </html>
