@@ -3,811 +3,808 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess 2: Advanced Augment Edition</title>
+    <title>ARGUMENT CHESS ~the age of revolution~</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
+
         :root {
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #6366f1;
-            --white-sq: #e2e8f0;
-            --black-sq: #475569;
-            --highlight: rgba(99, 102, 241, 0.6);
-            --last-move: rgba(234, 179, 8, 0.4);
+            --bg-dark: #0f0f12;
+            --panel-dark: #1a1a20;
+            --accent-gold: #c5a059;
+            --board-light: #d1d5db;
+            --board-dark: #4b5563;
         }
 
         body {
             background-color: var(--bg-dark);
             color: white;
-            font-family: 'Pretendard', sans-serif;
+            font-family: 'Noto Sans KR', sans-serif;
             overflow: hidden;
+            margin: 0;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Chess Board Styles */
-        #board-container {
+        .cinzel { font-family: 'Cinzel', serif; }
+
+        /* Board Themes */
+        .theme-modern { --light: #d1d5db; --dark: #4b5563; }
+        .theme-wood { --light: #e9d5b3; --dark: #8b4513; }
+        .theme-ocean { --light: #a5f3fc; --dark: #0e7490; }
+
+        #game-container {
+            display: flex;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--panel-dark);
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+
+        #board-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #chess-board {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
-            width: 600px;
-            height: 600px;
-            border: 4px solid #334155;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            grid-template-rows: repeat(8, 1fr);
+            width: 70vh;
+            height: 70vh;
+            border: 5px solid #333;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
             position: relative;
         }
 
         .square {
-            width: 75px;
-            height: 75px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 45px;
+            font-size: 3.5rem;
             cursor: pointer;
             position: relative;
-            transition: background-color 0.2s;
-            user-select: none;
+            transition: background 0.2s;
         }
 
-        .square.white { background-color: var(--white-sq); color: #1e293b; }
-        .square.black { background-color: var(--black-sq); color: #f8fafc; }
-        .square.highlight { background-color: var(--highlight) !important; }
-        .square.last-move { background-color: var(--last-move) !important; }
-        
+        .square.light { background-color: var(--light); }
+        .square.dark { background-color: var(--dark); }
+        .square.selected { background-color: rgba(197, 160, 89, 0.6) !important; }
+        .square.highlight { background-color: rgba(255, 255, 0, 0.3) !important; }
+        .square.last-move { background-color: rgba(100, 200, 100, 0.4) !important; }
+
         .piece {
+            user-select: none;
             z-index: 10;
-            transition: transform 0.2s ease-in-out;
+            transition: transform 0.3s ease;
         }
-        
-        .piece:hover { transform: scale(1.1); }
 
-        /* Augment Card UI */
-        .augment-overlay {
-            position: absolute;
+        /* Augment Modal */
+        #augment-overlay {
+            position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
         }
 
-        .card {
-            background: var(--card-bg);
-            border: 2px solid var(--accent);
-            border-radius: 12px;
+        .augment-card {
+            width: 240px;
+            height: 340px;
+            background: linear-gradient(135deg, #2a2a35 0%, #121215 100%);
+            border: 2px solid var(--accent-gold);
+            border-radius: 15px;
             padding: 20px;
-            width: 250px;
-            text-align: center;
+            margin: 0 15px;
             cursor: pointer;
             transition: all 0.3s;
-            margin: 10px;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 0 20px var(--accent);
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: 300px;
-            background: var(--card-bg);
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            border-left: 1px solid #334155;
-            border-right: 1px solid #334155;
+            align-items: center;
+            text-align: center;
         }
 
-        .move-log {
-            height: 200px;
-            overflow-y: auto;
-            background: #0f172a;
-            border-radius: 8px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 14px;
+        .augment-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 0 30px var(--accent-gold);
+        }
+
+        .card-title {
+            color: var(--accent-gold);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        /* Screen Shake */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
 
         .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
 
-        .flash-red { animation: flashRed 0.5s; }
-        @keyframes flashRed {
-            0% { background: transparent; }
-            50% { background: rgba(239, 68, 68, 0.5); }
-            100% { background: transparent; }
-        }
-
-        /* 3-second delay message */
-        #delay-notice {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
-            padding: 2rem;
-            border-radius: 1rem;
-            border: 2px solid gold;
+        /* Lobby */
+        #lobby {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #2a2a35 0%, #0f0f12 100%);
             z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-gold {
+            background: transparent;
+            border: 2px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 12px 40px;
+            font-size: 1.5rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .btn-gold:hover {
+            background: var(--accent-gold);
+            color: black;
+        }
+
+        /* Notification for 3s delay */
+        #status-notif {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(197, 160, 89, 0.9);
+            color: black;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.4rem;
+            z-index: 1000;
             display: none;
-            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Captured pieces */
+        .captured-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            min-height: 80px;
         }
     </style>
 </head>
-<body>
+<body class="theme-modern">
 
-<nav class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
-    <h1 class="text-2xl font-bold italic tracking-tighter text-indigo-400">CHESS 2 <span class="text-xs text-white bg-indigo-600 px-2 py-1 rounded">PRO</span></h1>
-    <div class="flex gap-4">
-        <button onclick="openDict()" class="text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg border border-slate-500 transition"><i class="fas fa-book mr-2"></i>증강 도감</button>
-        <button onclick="openSettings()" class="text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg border border-slate-500 transition"><i class="fas fa-cog mr-2"></i>설정</button>
+    <!-- Status Notification -->
+    <div id="status-notif">능력 발동 중...</div>
+
+    <!-- Lobby -->
+    <div id="lobby">
+        <h1 class="cinzel text-6xl mb-4 text-[#c5a059]">ARGUMENT CHESS</h1>
+        <p class="cinzel text-xl mb-12 tracking-widest opacity-70">~ the age of revolution ~</p>
+        <button class="btn-gold cinzel" onclick="startGame()">ENTER THE ARENA</button>
+        <button class="text-gray-500 mt-4 underline" onclick="showEncyclopedia()">증강 도감 (Encyclopedia)</button>
     </div>
-</nav>
 
-<div class="flex flex-1 overflow-hidden">
-    <!-- Left Sidebar: Info -->
-    <aside class="sidebar overflow-y-auto">
-        <div class="p-4 bg-indigo-950/30 rounded-xl border border-indigo-500/30">
-            <h3 class="text-xs uppercase text-indigo-300 font-bold mb-2">현재 턴</h3>
-            <div id="turn-display" class="text-2xl font-black">WHITE</div>
-            <div id="timer" class="text-lg font-mono mt-1 opacity-70">00:00</div>
+    <!-- Augment Overlay -->
+    <div id="augment-overlay">
+        <h2 id="augment-player-turn" class="cinzel text-4xl text-white mb-10">WHITE PLAYER SELECT</h2>
+        <div class="flex" id="augment-cards-container">
+            <!-- Cards will be injected here -->
         </div>
-
-        <div class="flex-1">
-            <h3 class="text-sm font-bold mb-2 text-slate-400"><i class="fas fa-bolt mr-2 text-yellow-500"></i>활성화된 증강</h3>
-            <div id="active-augments" class="flex flex-wrap gap-2 text-xs">
-                <!-- Augments will appear here -->
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-2">
-            <button onclick="undoMove()" class="bg-slate-700 hover:bg-slate-600 py-3 rounded-xl transition font-bold"><i class="fas fa-undo mr-2"></i>UNDO</button>
-            <button onclick="resetGame()" class="bg-red-900/50 hover:bg-red-800 py-3 rounded-xl transition font-bold text-red-200 border border-red-500/30">RESET</button>
-        </div>
-    </aside>
-
-    <!-- Center: Board -->
-    <main class="flex-1 flex justify-center items-center relative bg-black/20">
-        <div id="board-container"></div>
-        
-        <!-- Augment Selection Overlay -->
-        <div id="augment-overlay" class="augment-overlay">
-            <h2 id="augment-title" class="text-3xl font-black text-white mb-8 italic">화이트 증강 선택</h2>
-            <div id="card-container" class="flex flex-wrap justify-center"></div>
-        </div>
-
-        <!-- 3-Second Wait Message -->
-        <div id="delay-notice">
-            <h2 class="text-2xl font-bold text-yellow-400 mb-2">준비 중...</h2>
-            <p class="text-white opacity-80">전술을 가다듬으세요. (3초)</p>
-            <div class="mt-4 w-full bg-gray-700 h-1 rounded-full overflow-hidden">
-                <div id="delay-progress" class="bg-yellow-500 h-full w-0 transition-all duration-3000 ease-linear"></div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Right Sidebar: Logs -->
-    <aside class="sidebar">
-        <div>
-            <h3 class="text-sm font-bold mb-2 text-slate-400"><i class="fas fa-list-ol mr-2"></i>기보 기록</h3>
-            <div id="move-log" class="move-log"></div>
-        </div>
-
-        <div>
-            <h3 class="text-sm font-bold mb-2 text-slate-400"><i class="fas fa-skull mr-2 text-red-500"></i>획득한 기물</h3>
-            <div class="grid grid-cols-2 gap-2">
-                <div id="captured-white" class="p-2 bg-slate-800 rounded-lg min-h-[60px] flex flex-wrap gap-1"></div>
-                <div id="captured-black" class="p-2 bg-slate-800 rounded-lg min-h-[60px] flex flex-wrap gap-1"></div>
-            </div>
-        </div>
-    </aside>
-</div>
-
-<!-- Modals -->
-<div id="modal-backdrop" class="fixed inset-0 bg-black/80 z-[300] hidden items-center justify-center p-4">
-    <div id="modal-content" class="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-8 shadow-2xl">
-        <!-- Content dynamic -->
     </div>
-</div>
 
-<script>
-    // --- Constants & Config ---
-    const PIECES = {
-        wP: '♙', wR: '♖', wN: '♘', wB: '♗', wQ: '♕', wK: '♔',
-        bP: '♟', bR: '♜', bN: '♞', bB: '♝', bQ: '♛', bK: '♚'
-    };
+    <!-- Main Game UI -->
+    <div id="game-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#333] pb-2">STATUS</h2>
+            <div class="mb-4">
+                <span class="text-gray-400">TURN:</span>
+                <span id="turn-display" class="float-right font-bold text-white">WHITE</span>
+            </div>
+            <div class="mb-4">
+                <span class="text-gray-400">TIME:</span>
+                <span id="timer-display" class="float-right font-mono">00:00</span>
+            </div>
+            <div class="flex-1 overflow-y-auto mt-4 border-t border-[#333] pt-4">
+                <h3 class="text-sm text-[#c5a059] mb-2">ACTIVE AUGMENTS</h3>
+                <ul id="active-augments" class="text-xs space-y-1"></ul>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+                <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-2 rounded text-xs">UNDO</button>
+                <button onclick="location.reload()" class="bg-red-900 hover:bg-red-800 p-2 rounded text-xs text-white">RESET</button>
+            </div>
+        </div>
 
-    const AUGMENT_POOL = [
-        { id: 'uranium', name: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 1칸 적/아군 삭제(킹 제외) 후 비숍 자폭" },
-        { id: 'khan', name: "칸의 후예", desc: "비숍이 나이트로 변경. 킹이 나이트의 행마법 획득" },
-        { id: 'true_king', name: "진정한 왕은 누구인가?", desc: "퀸 삭제. 킹이 퀸의 행마법 획득" },
-        { id: 'colossus', name: "체크메이트의 거신병", desc: "내 모든 폰 전멸 시 d열에 퀸 즉시 소환" },
-        { id: 'chess960', name: "체스 960", desc: "내 폰/킹 제외 기물 위치 무작위 셔플" },
-        { id: 'road_heaven', name: "천국에 가는 길", desc: "다음 증강 선택 시 '중력 반전' 확정 등장" },
-        { id: 'undo_max', name: "Undo!", desc: "되돌리기 무제한 활성화" },
-        { id: 'frontline', name: "전방 전선", desc: "내 모든 폰이 1칸 전진하며 경로상 기물(킹 제외) 삭제" },
-        { id: 'super_knight', name: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
-        { id: 'shocking_pawn', name: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
-        { id: 'time_stop', name: "시간 정지", desc: "3턴간 나만 행동 (킹 전용 무적 이동 가능)" },
-        { id: 'evolve_pawn', name: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
-        { id: 'battle_knight', name: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
-        { id: 'sniper_bishop', name: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
-        { id: 'meteor', name: "메테오 스트라이크", desc: "룩이 기물을 관통하여 끝까지 공격" },
-        { id: 'king_jump', name: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
-        { id: 'necromancy', name: "네크로맨시", desc: "킹 이동 불가, 대신 주변 빈 공간에 폰 소환 가능" },
-        { id: 'gravity', name: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
-        { id: 'royal_guard', name: "로열 가드", desc: "킹 주변 8칸 내 아군 기물 무적 상태" }
-    ];
+        <!-- Center Board -->
+        <div id="board-wrapper">
+            <div id="chess-board"></div>
+        </div>
 
-    // --- State Variables ---
-    let board = [];
-    let turn = 'WHITE';
-    let selectedSquare = null;
-    let validMoves = [];
-    let moveHistory = [];
-    let turnCount = 0;
-    let whiteAugments = [];
-    let blackAugments = [];
-    let isFrozen = false;
-    let nextAugmentForceGravity = { WHITE: false, BLACK: false };
-    let timeStopRemaining = 0;
-    let timeStopOwner = null;
-    let gameStartTime = Date.now();
-    let isDelaying = false;
+        <!-- Right Sidebar -->
+        <div class="sidebar">
+            <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#333] pb-2">LOGS</h2>
+            <div id="move-log" class="flex-1 overflow-y-auto text-xs space-y-1 font-mono text-gray-400 p-2">
+            </div>
+            <div class="mt-4 border-t border-[#333] pt-4">
+                <h3 class="text-xs text-gray-500 mb-2">CAPTURED (WHITE)</h3>
+                <div id="captured-white" class="captured-container"></div>
+                <h3 class="text-xs text-gray-500 mt-2 mb-2">CAPTURED (BLACK)</h3>
+                <div id="captured-black" class="captured-container"></div>
+            </div>
+        </div>
+    </div>
 
-    // --- Initialization ---
-    function initBoard() {
-        board = Array(8).fill(null).map(() => Array(8).fill(null));
-        // Pawns
-        for (let i = 0; i < 8; i++) {
-            board[1][i] = 'bP';
-            board[6][i] = 'wP';
-        }
-        // Black
-        const bOrder = ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'];
-        for (let i = 0; i < 8; i++) board[0][i] = bOrder[i];
-        // White
-        const wOrder = ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'];
-        for (let i = 0; i < 8; i++) board[7][i] = wOrder[i];
-    }
+    <script>
+        // --- Core Game Variables ---
+        const board = document.getElementById('chess-board');
+        const turnDisplay = document.getElementById('turn-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const moveLog = document.getElementById('move-log');
+        const activeAugmentsList = document.getElementById('active-augments');
+        const statusNotif = document.getElementById('status-notif');
 
-    function renderBoard() {
-        const container = document.getElementById('board-container');
-        container.innerHTML = '';
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                const sq = document.createElement('div');
-                sq.className = `square ${(r + c) % 2 === 0 ? 'white' : 'black'}`;
-                sq.dataset.row = r;
-                sq.dataset.col = c;
-                
-                const piece = board[r][c];
-                if (piece) {
-                    const pieceEl = document.createElement('span');
-                    pieceEl.className = 'piece';
-                    pieceEl.textContent = PIECES[piece];
-                    if (piece[0] === 'b') pieceEl.style.color = '#000';
-                    sq.appendChild(pieceEl);
-                }
-
-                // Highlight last move
-                if (moveHistory.length > 0) {
-                    const last = moveHistory[moveHistory.length-1];
-                    if ((r === last.from.r && c === last.from.c) || (r === last.to.r && c === last.to.c)) {
-                        sq.classList.add('last-move');
-                    }
-                }
-
-                // Highlight valid moves
-                if (validMoves.some(m => m.r === r && m.c === c)) {
-                    sq.classList.add('highlight');
-                }
-
-                sq.onclick = () => handleSquareClick(r, c);
-                container.appendChild(sq);
-            }
-        }
-        document.getElementById('turn-display').textContent = turn;
-        document.getElementById('turn-display').style.color = turn === 'WHITE' ? '#fff' : '#475569';
-    }
-
-    // --- Interaction ---
-    async function handleSquareClick(r, c) {
-        if (isFrozen || isDelaying) return;
-
-        const piece = board[r][c];
-
-        // Selection
-        if (selectedSquare) {
-            const move = validMoves.find(m => m.r === r && m.c === c);
-            if (move) {
-                executeMove(selectedSquare.r, selectedSquare.c, r, c);
-                selectedSquare = null;
-                validMoves = [];
-                return;
-            }
-        }
-
-        // Picking a piece
-        if (piece && ((turn === 'WHITE' && piece[0] === 'w') || (turn === 'BLACK' && piece[0] === 'b'))) {
-            // 시간정지 중에는 킹만 선택 가능
-            if (timeStopRemaining > 0 && piece[1] !== 'K') {
-                return; 
-            }
-            
-            selectedSquare = { r, c };
-            validMoves = getValidMoves(r, c);
-            renderBoard();
-        } else {
-            selectedSquare = null;
-            validMoves = [];
-            renderBoard();
-        }
-    }
-
-    function getValidMoves(r, c) {
-        const piece = board[r][c];
-        const type = piece[1];
-        const color = piece[0];
-        let moves = [];
-
-        // Simplified logic for brevity - in actual deployment all chess rules apply
-        const directions = {
-            'R': [[0, 1], [0, -1], [1, 0], [-1, 0]],
-            'B': [[1, 1], [1, -1], [-1, 1], [-1, -1]],
-            'N': [[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [1, -2], [-1, 2], [-1, -2]],
-            'Q': [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]],
-            'K': [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]
+        let gameState = {
+            board: [],
+            turn: 'white',
+            selected: null,
+            history: [],
+            startTime: null,
+            augments: { white: [], black: [] },
+            turnCount: 0,
+            moveCount: 0,
+            isAugmentPhase: false,
+            timeStopTurns: 0, // Remaining turns for time stop
+            undoUsed: 0
         };
 
-        // Augment: 결전병기 나이트 (나이트가 비숍 이동 가능)
-        if (type === 'N' && hasAugment(color, 'battle_knight')) {
-            directions['N'].push(...directions['B']);
-        }
-        // Augment: 초살병기 나이트 (나이트가 룩 이동 가능)
-        if (type === 'N' && hasAugment(color, 'super_knight')) {
-            directions['N'].push(...directions['R']);
-        }
+        const PIECES = {
+            white: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+            black: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+        };
 
-        if (type === 'P') {
-            const dir = color === 'w' ? (hasAugment('w', 'gravity') ? 1 : -1) : (hasAugment('b', 'gravity') ? -1 : 1);
-            // Forward
-            if (isInside(r + dir, c) && !board[r + dir][c]) {
-                moves.push({ r: r + dir, c });
-                // Double move
-                const startRow = color === 'w' ? 6 : 1;
-                if (r === startRow && !board[r + dir * 2][c]) moves.push({ r: r + dir * 2, c });
-            }
-            // Capture
-            [[dir, 1], [dir, -1]].forEach(([dr, dc]) => {
-                if (isInside(r + dr, c + dc) && board[r + dr][c + dc] && board[r + dr][c + dc][0] !== color) {
-                    moves.push({ r: r + dr, c: c + dc });
-                }
-            });
-            // Augment: 졸병 진화 (좌우 이동)
-            if (hasAugment(color, 'evolve_pawn')) {
-                [[0, 1], [0, -1]].forEach(([dr, dc]) => {
-                    if (isInside(r + dr, c + dc) && !board[r + dr][c + dc]) moves.push({ r: r + dr, c: c + dc });
-                });
-            }
-        } else if (['R', 'B', 'Q'].includes(type)) {
-            const dirs = directions[type];
-            dirs.forEach(([dr, dc]) => {
-                let nr = r + dr, nc = c + dc;
-                while (isInside(nr, nc)) {
-                    if (!board[nr][nc]) {
-                        moves.push({ r: nr, c: nc });
-                    } else {
-                        if (board[nr][nc][0] !== color) moves.push({ r: nr, c: nc });
-                        // Augment: 메테오 스트라이크 (룩 관통)
-                        if (type === 'R' && hasAugment(color, 'meteor')) {
-                            nr += dr; nc += dc; continue;
-                        }
-                        // Augment: 저격 비숍 (비숍 점프)
-                        if (type === 'B' && hasAugment(color, 'sniper_bishop')) {
-                            nr += dr; nc += dc; continue;
-                        }
-                        break;
-                    }
-                    nr += dr; nc += dc;
-                }
-            });
-        } else if (type === 'N') {
-            directions['N'].forEach(([dr, dc]) => {
-                const nr = r + dr, nc = c + dc;
-                if (isInside(nr, nc) && (!board[nr][nc] || board[nr][nc][0] !== color)) {
-                    moves.push({ r: nr, c: nc });
-                }
-            });
-        } else if (type === 'K') {
-            directions['K'].forEach(([dr, dc]) => {
-                const nr = r + dr, nc = c + dc;
-                if (isInside(nr, nc) && (!board[nr][nc] || board[nr][nc][0] !== color)) {
-                    moves.push({ r: nr, c: nc });
-                }
-            });
-            // Augment: 킹스 어택
-            if (hasAugment(color, 'king_jump')) {
-                [[2, 2], [2, -2], [-2, 2], [-2, -2]].forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (isInside(nr, nc) && (!board[nr][nc] || board[nr][nc][0] !== color)) moves.push({ r: nr, c: nc });
-                });
-            }
-            // Augment: 진정한 왕 (퀸 행마)
-            if (hasAugment(color, 'true_king') || (color === 'w' && hasAugment('w', 'khan')) || (color === 'b' && hasAugment('b', 'khan'))) {
-                // Simplified: give Queen moves to King
-                directions['Q'].forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    while (isInside(nr, nc)) {
-                        if (!board[nr][nc]) moves.push({ r: nr, c: nc });
-                        else {
-                            if (board[nr][nc][0] !== color) moves.push({ r: nr, c: nc });
-                            break;
-                        }
-                        nr += dr; nc += dc;
-                    }
-                });
-            }
-        }
+        const AUGMENT_POOL = [
+            { id: 'uranium', title: "열화우라늄날개안정분리철갑탄", desc: "비숍 이동 시 주변 1칸 적/아군 삭제(킹 제외) 후 비숍 사망" },
+            { id: 'khan', title: "칸의 후예", desc: "비숍이 나이트로 변경. 킹이 나이트의 행마법 획득" },
+            { id: 'real_king', title: "진정한 왕은 누구인가?", desc: "퀸 삭제. 킹이 퀸의 행마법 획득" },
+            { id: 'colossus', title: "체크메이트의 거신병", desc: "내 모든 폰 전멸 시 d열 1행에 퀸 소환" },
+            { id: 'chess960', title: "체스 960", desc: "내 기물(폰/킹 제외)의 위치를 무작위로 뒤섞음" },
+            { id: 'heaven', title: "천국에 가는 길", desc: "다음 증강 선택 시 확정으로 '중력 반전' 등장" },
+            { id: 'undo', title: "Undo!", desc: "되돌리기 무제한 활성화" },
+            { id: 'frontline', title: "전방 전선", desc: "화이트 폰 전선을 기준으로 모든 기물 파괴(킹 제외) 및 전진" },
+            { id: 'super_knight', title: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
+            { id: 'shocking_pawns', title: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
+            { id: 'timestop', title: "시간 정지", desc: "3턴간 화이트만 행동 가능 (킹 전용 무적 이동 가능)" },
+            { id: 'evolve_pawn', title: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
+            { id: 'final_knight', title: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
+            { id: 'sniper_bishop', title: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
+            { id: 'meteor_strike', title: "메테오 스트라이크", desc: "룩이 기물을 관통하여 공격" },
+            { id: 'king_attack', title: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
+            { id: 'necromancy', title: "네크로맨시", desc: "킹 이동 불가, 주변 빈 공간에 폰 소환 가능" },
+            { id: 'gravity', title: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
+            { id: 'royal_guard', title: "로열 가드", desc: "킹 주변 아군은 잡히지 않음" }
+        ];
 
-        return moves;
-    }
+        // --- Initialization ---
 
-    function isInside(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+        function initBoard() {
+            const layout = [
+                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+                Array(8).fill(null),
+                Array(8).fill(null),
+                Array(8).fill(null),
+                Array(8).fill(null),
+                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+            ];
 
-    function executeMove(fr, fc, tr, tc) {
-        const piece = board[fr][fc];
-        const target = board[tr][tc];
-
-        // Capture logic
-        if (target) {
-            if (target[1] === 'K') {
-                gameOver(piece[0] === 'w' ? 'WHITE' : 'BLACK');
-                return;
-            }
-            capturePiece(target);
-        }
-
-        // Uranium Bishop effect
-        if (piece[1] === 'B' && hasAugment(piece[0], 'uranium')) {
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    const nr = tr + i, nc = tc + j;
-                    if (isInside(nr, nc) && board[nr][nc] && board[nr][nc][1] !== 'K') {
-                        board[nr][nc] = null;
-                    }
+            gameState.board = [];
+            for (let r = 0; r < 8; r++) {
+                gameState.board[r] = [];
+                for (let c = 0; c < 8; c++) {
+                    let piece = null;
+                    if (r < 2) piece = { type: layout[r][c], color: 'black' };
+                    if (r > 5) piece = { type: layout[7-r][c], color: 'white' };
+                    gameState.board[r][c] = piece;
                 }
             }
-            board[fr][fc] = null;
-        } else {
-            board[tr][tc] = piece;
-            board[fr][fc] = null;
-        }
-
-        // Log move
-        const notation = `${piece}${String.fromCharCode(97 + fc)}${8 - fr}→${String.fromCharCode(97 + tc)}${8 - tr}`;
-        logMove(notation);
-
-        moveHistory.push({ from: { r: fr, c: fc }, to: { r: tr, c: tc }, piece, target, boardBefore: JSON.parse(JSON.stringify(board)) });
-
-        // End turn or check time stop
-        if (timeStopRemaining > 0 && timeStopOwner === (piece[0] === 'w' ? 'WHITE' : 'BLACK')) {
-            timeStopRemaining--;
-            if (timeStopRemaining === 0) {
-                timeStopOwner = null;
-                turn = turn === 'WHITE' ? 'BLACK' : 'WHITE';
-            }
-        } else {
-            turn = turn === 'WHITE' ? 'BLACK' : 'WHITE';
-            turnCount++;
-        }
-
-        renderBoard();
-        checkAugmentTrigger();
-    }
-
-    // --- Augment Logic ---
-    function checkAugmentTrigger() {
-        // First augment at turn 6, then every 4 turns
-        if ((turnCount === 6) || (turnCount > 6 && (turnCount - 6) % 4 === 0)) {
-            showAugmentSelection('WHITE');
-        }
-    }
-
-    function showAugmentSelection(player) {
-        isFrozen = true;
-        const overlay = document.getElementById('augment-overlay');
-        const container = document.getElementById('card-container');
-        const title = document.getElementById('augment-title');
-
-        title.textContent = `${player}의 증강 선택`;
-        container.innerHTML = '';
-        overlay.style.display = 'flex';
-
-        let pool = [...AUGMENT_POOL];
-        
-        // Road to Heaven logic
-        if (nextAugmentForceGravity[player]) {
-            const gravity = pool.find(a => a.id === 'gravity');
-            pool = pool.filter(a => a.id !== 'gravity').sort(() => 0.5 - Math.random()).slice(0, 2);
-            pool.push(gravity);
-            nextAugmentForceGravity[player] = false;
-        } else {
-            pool = pool.sort(() => 0.5 - Math.random()).slice(0, 3);
-        }
-
-        pool.forEach(aug => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<h3 class="text-xl font-bold mb-2">${aug.name}</h3><p class="text-sm opacity-80">${aug.desc}</p>`;
-            card.onclick = () => {
-                applyAugment(player, aug.id);
-                overlay.style.display = 'none';
-                if (player === 'WHITE') {
-                    showAugmentSelection('BLACK');
-                } else {
-                    startDelay(); // Both selected, start 3s wait
-                }
-            };
-            container.appendChild(card);
-        });
-    }
-
-    function startDelay() {
-        isDelaying = true;
-        const notice = document.getElementById('delay-notice');
-        const progress = document.getElementById('delay-progress');
-        notice.style.display = 'block';
-        
-        // Reset progress bar
-        progress.style.transition = 'none';
-        progress.style.width = '0%';
-        
-        setTimeout(() => {
-            progress.style.transition = 'width 3s linear';
-            progress.style.width = '100%';
-        }, 10);
-
-        setTimeout(() => {
-            notice.style.display = 'none';
-            isFrozen = false;
-            isDelaying = false;
             renderBoard();
-        }, 3000);
-    }
+        }
 
-    function applyAugment(player, augId) {
-        const list = player === 'WHITE' ? whiteAugments : blackAugments;
-        list.push(augId);
+        function renderBoard() {
+            board.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    sq.dataset.row = r;
+                    sq.dataset.col = c;
+                    sq.onclick = () => handleSquareClick(r, c);
 
-        const badge = document.createElement('span');
-        badge.className = `px-2 py-1 rounded border ${player === 'WHITE' ? 'bg-indigo-900 border-indigo-400' : 'bg-slate-700 border-slate-400'}`;
-        badge.textContent = AUGMENT_POOL.find(a => a.id === augId).name;
-        document.getElementById('active-augments').appendChild(badge);
-
-        // Immediate effects
-        const color = player === 'WHITE' ? 'w' : 'b';
-        if (augId === 'frontline') {
-            // 수정: 전방 전선 - 내 폰만 전진, 상대 폰은 건드리지 않음
-            const dir = color === 'w' ? -1 : 1;
-            const tempBoard = JSON.parse(JSON.stringify(board));
-            
-            // 폰을 찾아서 전진 (충돌 처리 포함)
-            // 전진 방향에 따라 루프 순서 조절 (겹침 방지)
-            if (color === 'w') {
-                for (let r = 0; r < 8; r++) {
-                    for (let c = 0; c < 8; c++) {
-                        if (board[r][c] === 'wP') moveFrontline(r, c, dir);
+                    const piece = gameState.board[r][c];
+                    if (piece) {
+                        const pDiv = document.createElement('div');
+                        pDiv.className = 'piece';
+                        pDiv.textContent = PIECES[piece.color][piece.type];
+                        pDiv.style.color = piece.color === 'white' ? '#fff' : '#000';
+                        if (piece.color === 'black') {
+                            pDiv.style.textShadow = '0 0 5px rgba(255,255,255,0.3)';
+                        }
+                        sq.appendChild(pDiv);
                     }
+                    board.appendChild(sq);
+                }
+            }
+        }
+
+        // --- Game Logic ---
+
+        function handleSquareClick(r, c) {
+            if (gameState.isAugmentPhase) return;
+            
+            // Time Stop logic: Only white can move, and only king can move if turns > 0
+            if (gameState.timeStopTurns > 0) {
+                if (gameState.turn !== 'white') return;
+                const piece = gameState.board[r][c];
+                if (gameState.selected) {
+                    const [sr, sc] = gameState.selected;
+                    const movingPiece = gameState.board[sr][sc];
+                    if (movingPiece.type !== 'k') {
+                        gameState.selected = null;
+                        renderBoard();
+                        return;
+                    }
+                } else {
+                    if (!piece || piece.color !== 'white' || piece.type !== 'k') return;
+                }
+            }
+
+            const piece = gameState.board[r][c];
+
+            if (gameState.selected) {
+                const [sr, sc] = gameState.selected;
+                if (sr === r && sc === c) {
+                    gameState.selected = null;
+                } else if (isValidMove(sr, sc, r, c)) {
+                    executeMove(sr, sc, r, c);
+                } else if (piece && piece.color === gameState.turn) {
+                    gameState.selected = [r, c];
                 }
             } else {
-                for (let r = 7; r >= 0; r--) {
-                    for (let c = 0; c < 8; c++) {
-                        if (board[r][c] === 'bP') moveFrontline(r, c, dir);
-                    }
+                if (piece && piece.color === gameState.turn) {
+                    gameState.selected = [r, c];
                 }
             }
-        } else if (augId === 'chess960') {
-            const pieces = [];
-            for(let r=0; r<8; r++) {
-                for(let c=0; c<8; c++) {
-                    let p = board[r][c];
-                    if (p && p[0] === color && p[1] !== 'P' && p[1] !== 'K') {
-                        pieces.push(p);
-                        board[r][c] = null;
+            updateSelectionUI();
+        }
+
+        function isValidMove(sr, sc, dr, dc) {
+            const piece = gameState.board[sr][sc];
+            const target = gameState.board[dr][dc];
+            if (target && target.color === piece.color) return false;
+
+            const drDiff = dr - sr;
+            const dcDiff = dc - sc;
+            const absDr = Math.abs(drDiff);
+            const absDc = Math.abs(dcDiff);
+
+            // Time Stop: King can move anywhere (God mode)
+            if (gameState.timeStopTurns > 0 && piece.type === 'k') return true;
+
+            // Necromancy Check
+            if (hasAugment(piece.color, 'necromancy') && piece.type === 'k') return false;
+
+            // Basic Moves
+            switch(piece.type) {
+                case 'p':
+                    const dir = (piece.color === 'white' && !hasAugment('white', 'gravity')) || (piece.color === 'black' && hasAugment('black', 'gravity')) ? -1 : 1;
+                    // Normal
+                    if (dc === sc && !target) {
+                        if (dr === sr + dir) return true;
+                        if ((sr === 6 || sr === 1) && dr === sr + 2 * dir && !gameState.board[sr + dir][sc]) return true;
                     }
+                    // Capture
+                    if (absDc === 1 && dr === sr + dir && target) return true;
+                    // Evolve Pawn
+                    if (hasAugment(piece.color, 'evolve_pawn') && dr === sr && absDc === 1 && !target) return true;
+                    break;
+                case 'n':
+                    const isN = (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
+                    if (isN) return true;
+                    if (hasAugment(piece.color, 'super_knight') && (sr === dr || sc === dc) && isPathClear(sr, sc, dr, dc)) return true;
+                    if (hasAugment(piece.color, 'final_knight') && absDr === absDc && isPathClear(sr, sc, dr, dc)) return true;
+                    break;
+                case 'b':
+                    if (absDr === absDc && (hasAugment(piece.color, 'sniper_bishop') || isPathClear(sr, sc, dr, dc))) return true;
+                    if (hasAugment(piece.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) return true;
+                    break;
+                case 'r':
+                    if ((sr === dr || sc === dc) && (hasAugment(piece.color, 'meteor_strike') || isPathClear(sr, sc, dr, dc))) return true;
+                    break;
+                case 'q':
+                    if ((sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
+                    break;
+                case 'k':
+                    if (absDr <= 1 && absDc <= 1) return true;
+                    if (hasAugment(piece.color, 'king_attack') && absDr === 2 && absDc === 2) return true;
+                    if (hasAugment(piece.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) return true;
+                    if (hasAugment(piece.color, 'real_king') && (sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
+                    break;
+            }
+            return false;
+        }
+
+        function isPathClear(sr, sc, dr, dc) {
+            const stepR = dr === sr ? 0 : (dr > sr ? 1 : -1);
+            const stepC = dc === sc ? 0 : (dc > sc ? 1 : -1);
+            let r = sr + stepR;
+            let c = sc + stepC;
+            while (r !== dr || c !== dc) {
+                if (gameState.board[r][c]) return false;
+                r += stepR;
+                c += stepC;
+            }
+            return true;
+        }
+
+        async function executeMove(sr, sc, dr, dc) {
+            const piece = gameState.board[sr][sc];
+            const target = gameState.board[dr][dc];
+
+            // Royal Guard Protection
+            if (target && hasAugment(target.color, 'royal_guard')) {
+                const kingPos = findKing(target.color);
+                if (kingPos && Math.abs(kingPos.r - dr) <= 1 && Math.abs(kingPos.c - dc) <= 1) {
+                    gameState.selected = null;
+                    renderBoard();
+                    return;
                 }
             }
-            pieces.sort(() => 0.5 - Math.random());
-            for(let r=0; r<8; r++) {
-                for(let c=0; c<8; c++) {
-                    if (board[r][c] === null && pieces.length > 0) {
-                        // Original spawn points for backrows
-                        if ((color === 'w' && r === 7) || (color === 'b' && r === 0)) {
-                            board[r][c] = pieces.pop();
+
+            // Save history
+            gameState.history.push(JSON.parse(JSON.stringify(gameState.board)));
+
+            // Capture logic
+            if (target) {
+                const list = target.color === 'white' ? 'captured-white' : 'captured-black';
+                const capDiv = document.createElement('div');
+                capDiv.textContent = PIECES[target.color][target.type];
+                capDiv.style.fontSize = '1.5rem';
+                document.getElementById(list).appendChild(capDiv);
+                
+                if (target.type === 'k') {
+                    endGame(piece.color);
+                    return;
+                }
+            }
+
+            // Uranium Augment
+            if (piece.type === 'b' && hasAugment(piece.color, 'uranium')) {
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        const tr = dr + i, tc = dc + j;
+                        if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8) {
+                            const p = gameState.board[tr][tc];
+                            if (p && p.type !== 'k') gameState.board[tr][tc] = null;
                         }
                     }
                 }
+                gameState.board[sr][sc] = null;
+            } else {
+                gameState.board[dr][dc] = piece;
+                gameState.board[sr][sc] = null;
             }
-        } else if (augId === 'shocking_pawn') {
-            const oppColor = color === 'w' ? 'b' : 'w';
-            let targets = [];
-            for(let r=0; r<8; r++){
-                for(let c=0; c<8; c++){
-                    if (board[r][c] && board[r][c][0] === oppColor && board[r][c][1] !== 'K') targets.push({r,c});
+
+            // Log
+            const notation = `${piece.type}${String.fromCharCode(97+sc)}${8-sr}→${String.fromCharCode(97+dc)}${8-dr}`;
+            const logItem = document.createElement('div');
+            logItem.textContent = notation;
+            moveLog.prepend(logItem);
+
+            // Finalize Turn
+            gameState.selected = null;
+            gameState.moveCount++;
+
+            if (gameState.timeStopTurns > 0) {
+                gameState.timeStopTurns--;
+            } else {
+                gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
+            }
+
+            gameState.turnCount++;
+            
+            // Augment Trigger: 6th move first, then every 4 moves (total turns)
+            if ((gameState.moveCount === 6) || (gameState.moveCount > 6 && (gameState.moveCount - 6) % 4 === 0)) {
+                await startAugmentPhase();
+            }
+
+            renderBoard();
+            updateUI();
+        }
+
+        // --- Augments ---
+
+        async function startAugmentPhase() {
+            gameState.isAugmentPhase = true;
+            await showAugmentModal('white');
+            await showAugmentModal('black');
+            gameState.isAugmentPhase = false;
+        }
+
+        function showAugmentModal(player) {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('augment-overlay');
+                const container = document.getElementById('augment-cards-container');
+                const title = document.getElementById('augment-player-turn');
+                
+                title.textContent = `${player.toUpperCase()} PLAYER SELECT`;
+                container.innerHTML = '';
+                overlay.style.display = 'flex';
+
+                let pool = [...AUGMENT_POOL];
+                // Road to Heaven logic
+                if (hasAugment(player, 'heaven')) {
+                    const grav = pool.find(a => a.id === 'gravity');
+                    pool = [grav, ...pool.filter(a => a.id !== 'gravity').sort(() => 0.5 - Math.random()).slice(0, 2)];
+                } else {
+                    pool = pool.sort(() => 0.5 - Math.random()).slice(0, 3);
                 }
-            }
-            targets.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(t => {
-                board[t.r][t.c] = oppColor + 'P';
+
+                pool.forEach(aug => {
+                    const card = document.createElement('div');
+                    card.className = 'augment-card';
+                    card.innerHTML = `
+                        <div class="card-title cinzel">${aug.title}</div>
+                        <div class="card-desc">${aug.desc}</div>
+                    `;
+                    card.onclick = async () => {
+                        await applyAugment(player, aug);
+                        overlay.style.display = 'none';
+                        resolve();
+                    };
+                    container.appendChild(card);
+                });
             });
-        } else if (augId === 'time_stop') {
-            // 수정: 시간정지 소유권 명확화
-            timeStopRemaining = 3;
-            timeStopOwner = player;
-            turn = player; // 즉시 내 턴으로 고정
-        } else if (augId === 'road_heaven') {
-            nextAugmentForceGravity[player] = true;
-        } else if (augId === 'khan') {
-            for(let r=0; r<8; r++){
-                for(let c=0; c<8; c++){
-                    if (board[r][c] === color + 'B') board[r][c] = color + 'N';
+        }
+
+        async function applyAugment(player, augment) {
+            // 3s Delay logic
+            statusNotif.style.display = 'block';
+            statusNotif.textContent = `${augment.title} 발동 중...`;
+            await new Promise(r => setTimeout(r, 3000));
+            statusNotif.style.display = 'none';
+
+            gameState.augments[player].push(augment.id);
+            const li = document.createElement('li');
+            li.textContent = `[${player.toUpperCase()}] ${augment.title}`;
+            li.className = player === 'white' ? 'text-white' : 'text-gray-400';
+            activeAugmentsList.appendChild(li);
+
+            // Immediate effects
+            if (augment.id === 'frontline') {
+                // Modified Frontline: Based on white pawns, annihilates and pushes forward
+                // Regardless of who picks it, it triggers relative to white's advancement
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const p = gameState.board[r][c];
+                        if (p && p.type === 'p' && p.color === 'white') {
+                            const nr = r - 1;
+                            if (nr >= 0) {
+                                if (gameState.board[nr][c] && gameState.board[nr][c].type !== 'k') {
+                                    gameState.board[nr][c] = null; // Smash pieces
+                                }
+                                if (!gameState.board[nr][c]) {
+                                    gameState.board[nr][c] = p;
+                                    gameState.board[r][c] = null;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (augment.id === 'timestop') {
+                // Time stop: Only white gets the power
+                gameState.timeStopTurns = 3;
+                gameState.turn = 'white';
+            } else if (augment.id === 'shocking_pawns') {
+                const opponent = player === 'white' ? 'black' : 'white';
+                let targets = [];
+                for(let r=0; r<8; r++) {
+                    for(let c=0; c<8; c++) {
+                        const p = gameState.board[r][c];
+                        if(p && p.color === opponent && p.type !== 'k') targets.push({r,c});
+                    }
+                }
+                targets.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(t => {
+                    gameState.board[t.r][t.c].type = 'p';
+                });
+            } else if (augment.id === 'chess960') {
+                let pieces = [];
+                for(let r=0; r<8; r++) {
+                    for(let c=0; c<8; c++) {
+                        const p = gameState.board[r][c];
+                        if(p && p.color === player && p.type !== 'p' && p.type !== 'k') {
+                            pieces.push({...p});
+                            gameState.board[r][c] = null;
+                        }
+                    }
+                }
+                pieces.sort(() => 0.5 - Math.random());
+                let idx = 0;
+                const targetRow = player === 'white' ? 7 : 0;
+                for(let c=0; c<8; c++) {
+                    if(!gameState.board[targetRow][c]) {
+                        gameState.board[targetRow][c] = pieces[idx++];
+                        if(idx >= pieces.length) break;
+                    }
+                }
+            } else if (augment.id === 'necromancy') {
+                // Necromancy: Spawn pawns
+                const king = findKing(player);
+                if (king) {
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -1; j <= 1; j++) {
+                            const tr = king.r + i, tc = king.c + j;
+                            if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8 && !gameState.board[tr][tc]) {
+                                gameState.board[tr][tc] = { type: 'p', color: player };
+                            }
+                        }
+                    }
+                }
+            } else if (augment.id === 'colossus') {
+                // Check if no pawns
+                checkColossus(player);
+            }
+
+            renderBoard();
+        }
+
+        function checkColossus(player) {
+            let hasPawn = false;
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    if(gameState.board[r][c]?.color === player && gameState.board[r][c]?.type === 'p') hasPawn = true;
                 }
             }
-        } else if (augId === 'true_king') {
-            for(let r=0; r<8; r++){
-                for(let c=0; c<8; c++){
-                    if (board[r][c] === color + 'Q') board[r][c] = null;
+            if(!hasPawn && hasAugment(player, 'colossus')) {
+                gameState.board[player === 'white' ? 7 : 0][3] = { type: 'q', color: player };
+            }
+        }
+
+        // --- Utils ---
+
+        function hasAugment(player, id) {
+            return gameState.augments[player].includes(id);
+        }
+
+        function findKing(color) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (gameState.board[r][c]?.type === 'k' && gameState.board[r][c]?.color === color) return {r, c};
                 }
             }
+            return null;
         }
-    }
 
-    function moveFrontline(r, c, dir) {
-        const piece = board[r][c];
-        const nr = r + dir;
-        if (isInside(nr, c)) {
-            const target = board[nr][c];
-            if (!target || target[1] !== 'K') {
-                board[nr][c] = piece;
-                board[r][c] = null;
+        function updateUI() {
+            turnDisplay.textContent = gameState.turn.toUpperCase();
+            turnDisplay.style.color = gameState.turn === 'white' ? '#fff' : '#aaa';
+            
+            // Check Colossus again
+            checkColossus('white');
+            checkColossus('black');
+        }
+
+        function updateSelectionUI() {
+            document.querySelectorAll('.square').forEach(s => {
+                s.classList.remove('selected');
+            });
+            if (gameState.selected) {
+                const [r, c] = gameState.selected;
+                document.querySelector(`[data-row="${r}"][data-col="${c}"]`).classList.add('selected');
             }
         }
-    }
 
-    function hasAugment(color, augId) {
-        const list = color === 'w' ? whiteAugments : blackAugments;
-        return list.includes(augId);
-    }
-
-    // --- Helpers ---
-    function capturePiece(piece) {
-        const side = piece[0] === 'w' ? 'captured-white' : 'captured-black';
-        const el = document.createElement('span');
-        el.textContent = PIECES[piece];
-        el.className = 'text-2xl opacity-50';
-        document.getElementById(side).appendChild(el);
-    }
-
-    function logMove(text) {
-        const log = document.getElementById('move-log');
-        const entry = document.createElement('div');
-        entry.className = 'border-b border-slate-800 py-1';
-        entry.textContent = `[${turnCount}] ${text}`;
-        log.prepend(entry);
-    }
-
-    function undoMove() {
-        if (moveHistory.length === 0) return;
-        if (!hasAugment(turn === 'WHITE' ? 'w' : 'b', 'undo_max') && moveHistory.length > 5) {
-            // Undo restriction could be here
+        function undo() {
+            if (gameState.history.length > 0) {
+                if (gameState.undoUsed > 0 && !hasAugment(gameState.turn === 'white' ? 'black' : 'white', 'undo')) return;
+                gameState.board = gameState.history.pop();
+                gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
+                gameState.undoUsed++;
+                renderBoard();
+                updateUI();
+            }
         }
-        const last = moveHistory.pop();
-        board = last.boardBefore;
-        turn = last.piece[0] === 'w' ? 'WHITE' : 'BLACK';
-        turnCount--;
-        renderBoard();
-    }
 
-    function resetGame() {
-        if (confirm("게임을 초기화하시겠습니까?")) {
-            location.reload();
+        function startGame() {
+            document.getElementById('lobby').style.display = 'none';
+            gameState.startTime = Date.now();
+            setInterval(updateTimer, 1000);
+            initBoard();
         }
-    }
 
-    function gameOver(winner) {
-        isFrozen = true;
-        const modal = document.getElementById('modal-backdrop');
-        const content = document.getElementById('modal-content');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        content.innerHTML = `
-            <h2 class="text-5xl font-black mb-4 text-indigo-400 italic">CHECKMATE</h2>
-            <p class="text-2xl mb-8">${winner} 가 승리하였습니다!</p>
-            <button onclick="location.reload()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold text-xl hover:bg-indigo-500 transition">메인 메뉴로 이동</button>
-        `;
-        document.getElementById('board-container').classList.add('shake');
-    }
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const s = (elapsed % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+        }
 
-    // --- UI Modals ---
-    function openDict() {
-        const modal = document.getElementById('modal-backdrop');
-        const content = document.getElementById('modal-content');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        content.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">증강 도감</h2>
-                <button onclick="closeModal()" class="text-2xl">&times;</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${AUGMENT_POOL.map(a => `
-                    <div class="p-3 border border-slate-600 rounded-lg bg-slate-900/50">
-                        <div class="font-bold text-indigo-300">${a.name}</div>
-                        <div class="text-xs opacity-70">${a.desc}</div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
+        function endGame(winner) {
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.background = 'rgba(0,0,0,0.9)';
+            overlay.style.display = 'flex';
+            overlay.style.flexDirection = 'column';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '1000';
+            
+            overlay.innerHTML = `
+                <h1 class="cinzel text-6xl text-white mb-8">${winner.toUpperCase()} VICTORIOUS</h1>
+                <button onclick="location.reload()" class="btn-gold cinzel">RETURN TO LOBBY</button>
+            `;
+            document.body.appendChild(overlay);
+            document.getElementById('chess-board').classList.add('shake');
+        }
 
-    function openSettings() {
-        const modal = document.getElementById('modal-backdrop');
-        const content = document.getElementById('modal-content');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        content.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">환경 설정</h2>
-                <button onclick="closeModal()" class="text-2xl">&times;</button>
-            </div>
-            <div class="space-y-6">
-                <div>
-                    <label class="block mb-2 font-bold">보드 테마</label>
-                    <div class="flex gap-2">
-                        <button class="px-4 py-2 bg-slate-700 rounded border border-indigo-500">Modern Dark</button>
-                        <button class="px-4 py-2 bg-slate-800 rounded border border-slate-600 opacity-50">Classic Wood</button>
-                        <button class="px-4 py-2 bg-slate-800 rounded border border-slate-600 opacity-50">Deep Sea</button>
-                    </div>
-                </div>
-                <div>
-                    <label class="flex items-center gap-3">
-                        <input type="checkbox" checked class="w-5 h-5 accent-indigo-500">
-                        <span class="font-bold">체크메이트 연출 (화면 흔들림)</span>
-                    </label>
-                </div>
-            </div>
-        `;
-    }
+        function showEncyclopedia() {
+            const list = AUGMENT_POOL.map(a => `<div class="mb-4"><strong class="text-[#c5a059]">${a.title}:</strong> <span class="text-gray-300 text-sm">${a.desc}</span></div>`).join('');
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '50%'; modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            modal.style.width = '80%'; modal.style.maxHeight = '80vh';
+            modal.style.background = '#1a1a20'; modal.style.border = '2px solid #c5a059';
+            modal.style.padding = '30px'; modal.style.zIndex = '300';
+            modal.style.overflowY = 'auto';
+            modal.innerHTML = `<h2 class="cinzel text-3xl mb-6">AUGMENT ENCYCLOPEDIA</h2>${list}<button onclick="this.parentElement.remove()" class="mt-6 bg-gray-700 p-2 w-full">CLOSE</button>`;
+            document.body.appendChild(modal);
+        }
 
-    function closeModal() {
-        document.getElementById('modal-backdrop').classList.add('hidden');
-        document.getElementById('modal-backdrop').classList.remove('flex');
-    }
-
-    // Timer
-    setInterval(() => {
-        if (isFrozen) return;
-        const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
-        const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-        const s = (elapsed % 60).toString().padStart(2, '0');
-        document.getElementById('timer').textContent = `${m}:${s}`;
-    }, 1000);
-
-    // Bootstrap
-    window.onload = () => {
-        initBoard();
-        renderBoard();
-    };
-</script>
-
+    </script>
 </body>
 </html>
