@@ -13,9 +13,11 @@
             --bg-dark: #0f0f12;
             --panel-dark: #1a1a20;
             --accent-gold: #c5a059;
-            --board-light: #d1d5db;
-            --board-dark: #4b5563;
+            --light-sq: #d1d5db;
+            --dark-sq: #4b5563;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             background-color: var(--bg-dark);
@@ -29,12 +31,12 @@
         .cinzel { font-family: 'Cinzel', serif; }
 
         /* Board Themes */
-        .theme-modern { --light: #d1d5db; --dark: #4b5563; }
-        .theme-wood { --light: #e9d5b3; --dark: #8b4513; }
-        .theme-ocean { --light: #334155; --dark: #0f172a; }
+        .theme-modern { --light-sq: #d1d5db; --dark-sq: #4b5563; }
+        .theme-wood { --light-sq: #e9d5b3; --dark-sq: #8b4513; }
+        .theme-ocean { --light-sq: #334155; --dark-sq: #0f172a; }
 
         #game-container {
-            display: none; /* Initial state */
+            display: none;
             height: 100vh;
             padding: 20px;
             gap: 20px;
@@ -56,41 +58,56 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
         }
 
         #chess-board {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
+            grid-template-columns: repeat(8, 12.5%);
+            grid-template-rows: repeat(8, 12.5%);
             width: min(75vh, 80vw);
             height: min(75vh, 80vw);
             border: 8px solid #222;
+            background-color: #222;
             box-shadow: 0 0 60px rgba(0,0,0,0.7);
+            user-select: none;
             position: relative;
         }
 
         .square {
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: min(3.5rem, 8vw);
+            font-size: min(3.8rem, 8vw);
             cursor: pointer;
             position: relative;
-            transition: background 0.1s;
         }
 
-        .square.light { background-color: var(--light); }
-        .square.dark { background-color: var(--dark); }
+        .square.light { background-color: var(--light-sq); }
+        .square.dark { background-color: var(--dark-sq); }
         .square.selected { background-color: rgba(197, 160, 89, 0.7) !important; }
         .square.last-move { background-color: rgba(100, 200, 100, 0.3) !important; }
-        .square.in-check { background-color: rgba(255, 0, 0, 0.4) !important; }
+        .square.check { background-color: rgba(255, 0, 0, 0.4) !important; }
+
+        /* Valid Move Marker */
+        .valid-dot::after {
+            content: '';
+            width: 25%;
+            height: 25%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 5;
+        }
 
         .piece {
-            user-select: none;
             z-index: 10;
-            transition: transform 0.2s ease;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s ease;
         }
 
         /* Lobby */
@@ -109,7 +126,7 @@
             background: transparent;
             border: 2px solid var(--accent-gold);
             color: var(--accent-gold);
-            padding: 12px 40px;
+            padding: 14px 40px;
             font-size: 1.4rem;
             border-radius: 8px;
             transition: all 0.3s;
@@ -128,7 +145,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             z-index: 2000;
             display: none;
             justify-content: center;
@@ -142,15 +159,15 @@
             padding: 30px;
             border-radius: 15px;
             width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
+            max-width: 650px;
+            max-height: 85vh;
             overflow-y: auto;
         }
 
         #augment-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 1500;
             display: none;
             flex-direction: column;
@@ -167,58 +184,46 @@
             padding: 25px;
             margin: 0 15px;
             cursor: pointer;
-            transition: all 0.4s;
+            transition: transform 0.3s, box-shadow 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
         }
 
-        .augment-card:hover {
-            transform: translateY(-15px);
-            box-shadow: 0 0 40px var(--accent-gold);
+        .augment-card:hover { 
+            transform: translateY(-15px) scale(1.05); 
+            box-shadow: 0 0 40px var(--accent-gold); 
         }
 
         #status-notif {
             position: fixed;
-            top: 15%; left: 50%; transform: translateX(-50%);
+            top: 10%; left: 50%; transform: translateX(-50%);
             background: var(--accent-gold);
             color: black;
-            padding: 18px 50px;
-            border-radius: 40px;
+            padding: 15px 40px;
+            border-radius: 30px;
             font-weight: 800;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             z-index: 3000;
             display: none;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(-5px, 5px); }
-            50% { transform: translate(5px, -5px); }
-            75% { transform: translate(-5px, -5px); }
+            25% { transform: translate(-4px, 4px); }
+            50% { transform: translate(4px, -4px); }
+            75% { transform: translate(-4px, -4px); }
         }
-        .shake-anim { animation: shake 0.4s ease-in-out; }
-
-        .setting-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #333;
-        }
-
-        select, input[type="checkbox"] {
-            accent-color: var(--accent-gold);
-        }
+        .shake-anim { animation: shake 0.3s ease-in-out; }
     </style>
 </head>
 <body class="theme-modern">
 
-    <div id="status-notif">능력 발동 중...</div>
+    <div id="status-notif"></div>
 
-    <!-- Lobby Menu -->
+    <!-- Main Lobby -->
     <div id="lobby">
         <h1 class="cinzel text-7xl mb-2 text-[#c5a059] font-bold">ARGUMENT CHESS</h1>
         <p class="cinzel text-xl mb-12 tracking-[0.4em] opacity-60">THE AGE OF REVOLUTION</p>
@@ -230,95 +235,85 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Settings -->
     <div id="modal-settings" class="modal-overlay" onclick="closeModal(event, 'modal-settings')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 class="cinzel text-3xl text-[#c5a059] mb-6 text-center">SYSTEM SETTINGS</h2>
-            <div class="space-y-2">
-                <div class="setting-row">
+            <h2 class="cinzel text-3xl text-[#c5a059] mb-8 text-center">SYSTEM SETTINGS</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center border-b border-white/10 pb-4">
                     <span class="font-bold text-gray-300">BOARD THEME</span>
-                    <select id="theme-select" onchange="changeTheme(this.value)" class="bg-[#2a2a35] p-2 border border-[#444] rounded text-sm">
+                    <select id="theme-select" onchange="changeTheme(this.value)" class="bg-[#2a2a35] p-2 border border-[#444] rounded">
                         <option value="theme-modern">Modern Dark</option>
                         <option value="theme-wood">Classic Wood</option>
                         <option value="theme-ocean">Deep Sea</option>
                     </select>
                 </div>
-                <div class="setting-row">
-                    <span class="font-bold text-gray-300">SCREEN SHAKE</span>
-                    <input type="checkbox" id="shake-toggle" checked class="w-5 h-5">
-                </div>
-                <div class="setting-row">
-                    <span class="font-bold text-gray-300">ANIMATION SPEED</span>
-                    <select class="bg-[#2a2a35] p-2 border border-[#444] rounded text-sm">
-                        <option>Normal</option>
-                        <option>Fast</option>
-                    </select>
+                <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                    <span class="font-bold text-gray-300">SCREEN SHAKE EFFECT</span>
+                    <input type="checkbox" id="shake-toggle" checked class="w-6 h-6">
                 </div>
             </div>
-            <button class="btn-gold cinzel w-full mt-8 py-2 text-lg" onclick="document.getElementById('modal-settings').style.display='none'">APPLY & CLOSE</button>
+            <button class="btn-gold cinzel w-full mt-10 py-3" onclick="document.getElementById('modal-settings').style.display='none'">CONFIRM</button>
         </div>
     </div>
 
-    <!-- Encyclopedia Modal -->
+    <!-- Encyclopedia -->
     <div id="modal-encyclopedia" class="modal-overlay" onclick="closeModal(event, 'modal-encyclopedia')">
         <div class="modal-content max-w-3xl" onclick="event.stopPropagation()">
             <h2 class="cinzel text-3xl text-[#c5a059] mb-8 text-center">AUGMENT ENCYCLOPEDIA</h2>
-            <div id="encyclopedia-list" class="space-y-4"></div>
-            <button class="btn-gold cinzel w-full mt-8 py-2 text-lg" onclick="document.getElementById('modal-encyclopedia').style.display='none'">BACK</button>
+            <div id="encyclopedia-list" class="space-y-4 pr-2"></div>
+            <button class="btn-gold cinzel w-full mt-10 py-3" onclick="document.getElementById('modal-encyclopedia').style.display='none'">BACK TO MENU</button>
         </div>
     </div>
 
-    <!-- Augment Selection Overlay -->
+    <!-- Augment Overlay -->
     <div id="augment-overlay">
-        <h2 id="augment-player-turn" class="cinzel text-5xl text-white mb-14 font-bold">WHITE PLAYER SELECT</h2>
+        <h2 id="augment-player-turn" class="cinzel text-5xl text-white mb-12 font-bold">WHITE SELECTS</h2>
         <div class="flex" id="augment-cards-container"></div>
     </div>
 
-    <!-- Main Game UI -->
+    <!-- Game UI -->
     <div id="game-container">
-        <!-- Sidebar Left -->
         <div class="sidebar">
             <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#c5a059] pb-2 text-[#c5a059]">STATUS</h2>
-            <div class="space-y-5 mb-8">
-                <div class="flex justify-between items-center bg-black/20 p-3 rounded">
-                    <span class="text-xs text-gray-500 font-bold uppercase">Current Turn</span>
+            <div class="space-y-4 mb-8">
+                <div class="flex justify-between items-center bg-black/30 p-4 rounded-lg border border-white/5">
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Turn</span>
                     <span id="turn-display" class="font-black text-xl text-white">WHITE</span>
                 </div>
-                <div class="flex justify-between items-center bg-black/20 p-3 rounded">
-                    <span class="text-xs text-gray-500 font-bold uppercase">Time</span>
+                <div class="flex justify-between items-center bg-black/30 p-4 rounded-lg border border-white/5">
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Timer</span>
                     <span id="timer-display" class="font-mono text-xl text-white">00:00</span>
                 </div>
             </div>
 
-            <h3 class="text-xs font-bold text-[#c5a059] mb-3 uppercase tracking-widest">Active Augments</h3>
-            <div class="flex-1 overflow-y-auto mb-6 bg-black/40 p-3 rounded border border-[#333]">
-                <ul id="active-augments" class="text-[0.7rem] space-y-2"></ul>
+            <h3 class="text-xs font-bold text-[#c5a059] mb-3 uppercase tracking-[0.2em]">Active Augments</h3>
+            <div class="flex-1 overflow-y-auto mb-6 bg-black/40 p-4 rounded-lg border border-white/10">
+                <ul id="active-augments" class="text-[0.75rem] space-y-3"></ul>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mt-auto">
-                <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-3 rounded text-xs font-bold transition">UNDO</button>
-                <button onclick="location.reload()" class="bg-red-950/50 hover:bg-red-800 border border-red-900 p-3 rounded text-xs font-bold transition">EXIT</button>
+            <div class="grid grid-cols-2 gap-3 mt-auto">
+                <button onclick="undo()" class="bg-gray-800 hover:bg-gray-700 p-3 rounded-lg text-xs font-bold transition">UNDO</button>
+                <button onclick="exitToLobby()" class="bg-red-950/40 hover:bg-red-800 border border-red-900 p-3 rounded-lg text-xs font-bold transition">EXIT</button>
             </div>
         </div>
 
-        <!-- Chess Board -->
         <div id="board-wrapper">
             <div id="chess-board"></div>
         </div>
 
-        <!-- Sidebar Right -->
         <div class="sidebar">
             <h2 class="cinzel text-2xl text-center mb-6 border-b border-[#c5a059] pb-2 text-[#c5a059]">HISTORY</h2>
-            <div id="move-log" class="flex-1 overflow-y-auto text-[0.8rem] space-y-1 font-mono text-gray-400 p-3 bg-black/40 rounded border border-[#333] mb-6"></div>
+            <div id="move-log" class="flex-1 overflow-y-auto text-[0.85rem] space-y-2 font-mono text-gray-400 p-4 bg-black/40 rounded-lg border border-white/10 mb-6"></div>
             
             <div class="space-y-4">
-                <div>
-                    <h3 class="text-[0.6rem] text-gray-500 font-bold mb-2 uppercase tracking-widest">Captured by Black</h3>
-                    <div id="captured-white" class="flex flex-wrap min-h-[40px] bg-black/20 p-2 rounded"></div>
+                <div class="bg-black/20 p-3 rounded-lg border border-white/5">
+                    <h3 class="text-[0.65rem] text-gray-500 font-bold mb-2 uppercase tracking-widest">Captured by Black</h3>
+                    <div id="captured-white" class="flex flex-wrap gap-1 min-h-[30px]"></div>
                 </div>
-                <div>
-                    <h3 class="text-[0.6rem] text-gray-500 font-bold mb-2 uppercase tracking-widest">Captured by White</h3>
-                    <div id="captured-black" class="flex flex-wrap min-h-[40px] bg-black/20 p-2 rounded"></div>
+                <div class="bg-black/20 p-3 rounded-lg border border-white/5">
+                    <h3 class="text-[0.65rem] text-gray-500 font-bold mb-2 uppercase tracking-widest">Captured by White</h3>
+                    <div id="captured-black" class="flex flex-wrap gap-1 min-h-[30px]"></div>
                 </div>
             </div>
         </div>
@@ -338,18 +333,18 @@
             { id: 'chess960', title: "체스 960", desc: "내 기물(폰/킹 제외)의 위치를 무작위로 뒤섞음" },
             { id: 'heaven', title: "천국에 가는 길", desc: "다음 증강 선택 시 확정으로 '중력 반전' 등장" },
             { id: 'undo', title: "Undo!", desc: "되돌리기 무제한 활성화" },
-            { id: 'frontline', title: "전방 전선", desc: "모든 폰 1칸 전진 (킹 제외한 기물 파괴하며 전진)" },
+            { id: 'frontline', title: "전방 전선", desc: "모든 폰 1칸 전진 (기물 파괴, 킹 제외)" },
             { id: 'super_knight', title: "초살병기 나이트", desc: "나이트에게 룩의 행마 추가" },
             { id: 'shocking_pawns', title: "쇼킹 폰 월드", desc: "상대 무작위 기물 3개를 폰으로 변환" },
             { id: 'timestop', title: "시간 정지", desc: "3턴간 나만 행동 (킹 전용 무적 이동 가능)" },
             { id: 'evolve_pawn', title: "졸병 진화", desc: "폰이 좌우로도 이동 가능" },
             { id: 'final_knight', title: "결전병기 나이트", desc: "나이트가 비숍처럼 대각선 이동 가능" },
             { id: 'sniper_bishop', title: "저격 비숍", desc: "비숍이 기물을 뛰어넘어 공격 가능" },
-            { id: 'meteor_strike', title: "메테오 스트라이크", desc: "룩이 기물을 관통하여 공격" },
+            { id: 'meteor_strike', title: "메테오 스트라이크", desc: "룩이 기물을 관통하여 뒤까지 공격" },
             { id: 'king_attack', title: "킹스 어택", desc: "킹이 대각선 2칸 위치로 도약 가능" },
             { id: 'necromancy', title: "네크로맨시", desc: "킹 이동 불가, 대신 주변 빈 공간에 폰 소환 가능" },
             { id: 'gravity', title: "중력 반전", desc: "내 폰들의 전진 방향이 반대로 변경됨" },
-            { id: 'royal_guard', title: "로열 가드", desc: "킹 주변 8칸의 아군은 잡히지 않음" }
+            { id: 'royal_guard', title: "로열 가드", desc: "킹 주변 8칸의 아군 기물은 잡히지 않음" }
         ];
 
         let gameState = {
@@ -357,61 +352,110 @@
             turn: 'white',
             selected: null,
             history: [],
-            startTime: null,
             augments: { white: [], black: [] },
             moveCount: 0,
             isAugmentPhase: false,
             timeStopTurns: 0,
             lastMove: null,
-            enPassantTarget: null
+            enPassantTarget: null,
+            startTime: null,
+            timerInterval: null
         };
+
+        function resetGameState() {
+            if(gameState.timerInterval) clearInterval(gameState.timerInterval);
+            gameState = {
+                board: [],
+                turn: 'white',
+                selected: null,
+                history: [],
+                augments: { white: [], black: [] },
+                moveCount: 0,
+                isAugmentPhase: false,
+                timeStopTurns: 0,
+                lastMove: null,
+                enPassantTarget: null,
+                startTime: null,
+                timerInterval: null
+            };
+            document.getElementById('active-augments').innerHTML = '';
+            document.getElementById('move-log').innerHTML = '';
+            document.getElementById('captured-white').innerHTML = '';
+            document.getElementById('captured-black').innerHTML = '';
+        }
 
         function initBoard() {
             const layout = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
             gameState.board = Array(8).fill(null).map(() => Array(8).fill(null));
-
             for (let i = 0; i < 8; i++) {
                 gameState.board[0][i] = { type: layout[i], color: 'black', moved: false };
                 gameState.board[1][i] = { type: 'p', color: 'black', moved: false };
                 gameState.board[6][i] = { type: 'p', color: 'white', moved: false };
                 gameState.board[7][i] = { type: layout[i], color: 'white', moved: false };
             }
-            renderBoard();
+            renderInitialBoardStructure();
         }
 
-        // 보드가 깨지는 현상을 방지하기 위해 innerHTML을 한 번에 생성하여 교체
-        function renderBoard() {
+        function renderInitialBoardStructure() {
             const boardEl = document.getElementById('chess-board');
-            let boardHtml = '';
+            boardEl.innerHTML = '';
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const isLight = (r + c) % 2 === 0;
-                    const piece = gameState.board[r][c];
-                    let squareClass = `square ${isLight ? 'light' : 'dark'}`;
-                    
-                    if (gameState.selected && gameState.selected[0] === r && gameState.selected[1] === c) squareClass += ' selected';
-                    if (gameState.lastMove && ((gameState.lastMove.sr === r && gameState.lastMove.sc === c) || (gameState.lastMove.dr === r && gameState.lastMove.dc === c))) {
-                        squareClass += ' last-move';
-                    }
-
-                    let pieceHtml = '';
-                    if (piece) {
-                        const colorStyle = piece.color === 'white' ? 'color:#fff;' : 'color:#000;text-shadow:0 0 5px rgba(255,255,255,0.3);';
-                        pieceHtml = `<div class="piece" style="${colorStyle}">${PIECES[piece.color][piece.type]}</div>`;
-                    }
-
-                    boardHtml += `<div class="${squareClass}" data-row="${r}" data-col="${c}" onclick="handleSquareClick(${r}, ${c})">${pieceHtml}</div>`;
+                    const sq = document.createElement('div');
+                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    sq.id = `sq-${r}-${c}`;
+                    sq.onclick = () => handleSquareClick(r, c);
+                    boardEl.appendChild(sq);
                 }
             }
-            boardEl.innerHTML = boardHtml;
+            updateBoardDisplay();
+        }
+
+        function updateBoardDisplay() {
+            const currentCheck = isCheck(gameState.turn);
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const sq = document.getElementById(`sq-${r}-${c}`);
+                    const piece = gameState.board[r][c];
+                    
+                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    
+                    if (gameState.selected && gameState.selected[0] === r && gameState.selected[1] === c) {
+                        sq.classList.add('selected');
+                    }
+                    
+                    if (gameState.lastMove && (
+                        (gameState.lastMove.sr === r && gameState.lastMove.sc === c) || 
+                        (gameState.lastMove.dr === r && gameState.lastMove.dc === c)
+                    )) {
+                        sq.classList.add('last-move');
+                    }
+
+                    if (piece && piece.type === 'k' && piece.color === gameState.turn && currentCheck) {
+                        sq.classList.add('check');
+                    }
+
+                    if (gameState.selected && isValidMove(gameState.selected[0], gameState.selected[1], r, c)) {
+                        sq.classList.add('valid-dot');
+                    }
+
+                    sq.innerHTML = '';
+                    if (piece) {
+                        const pDiv = document.createElement('div');
+                        pDiv.className = 'piece';
+                        pDiv.textContent = PIECES[piece.color][piece.type];
+                        pDiv.style.color = piece.color === 'white' ? '#fff' : '#000';
+                        if(piece.color === 'black') pDiv.style.textShadow = '0 0 5px rgba(255,255,255,0.3)';
+                        sq.appendChild(pDiv);
+                    }
+                }
+            }
         }
 
         function handleSquareClick(r, c) {
             if (gameState.isAugmentPhase) return;
-
             const piece = gameState.board[r][c];
 
-            // Time Stop logic
             if (gameState.timeStopTurns > 0 && gameState.turn === 'white') {
                 if (gameState.selected) {
                     const [sr, sc] = gameState.selected;
@@ -421,7 +465,7 @@
                     }
                 } else if (piece && piece.type === 'k' && piece.color === 'white') {
                     gameState.selected = [r, c];
-                    renderBoard();
+                    updateBoardDisplay();
                     return;
                 }
             }
@@ -439,11 +483,12 @@
             } else if (piece && piece.color === gameState.turn) {
                 gameState.selected = [r, c];
             }
-            renderBoard();
+            updateBoardDisplay();
         }
 
-        function isValidMove(sr, sc, dr, dc) {
+        function isValidMove(sr, sc, dr, dc, checkKingSafety = true) {
             const p = gameState.board[sr][sc];
+            if (!p) return false;
             const target = gameState.board[dr][dc];
             if (target && target.color === p.color) return false;
 
@@ -452,103 +497,136 @@
             const absDr = Math.abs(drDiff);
             const absDc = Math.abs(dcDiff);
 
-            if (gameState.timeStopTurns > 0 && p.type === 'k' && p.color === 'white') return true;
-            if (hasAugment(p.color, 'necromancy') && p.type === 'k') return false;
+            let valid = false;
 
-            switch(p.type) {
-                case 'p':
-                    const dir = (p.color === 'white' && !hasAugment('white', 'gravity')) || (p.color === 'black' && hasAugment('black', 'gravity')) ? -1 : 1;
-                    if (dc === sc && dr === sr + dir && !target) return true;
-                    if (dc === sc && dr === sr + 2 * dir && !p.moved && !target && !gameState.board[sr + dir][sc]) return true;
-                    if (absDc === 1 && dr === sr + dir && target) return true;
-                    if (absDc === 1 && dr === sr + dir && !target && gameState.enPassantTarget && gameState.enPassantTarget.r === dr - dir && gameState.enPassantTarget.c === dc) return true;
-                    if (hasAugment(p.color, 'evolve_pawn') && dr === sr && absDc === 1 && !target) return true;
-                    break;
-                case 'n':
-                    const normalN = (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
-                    if (normalN) return true;
-                    if (hasAugment(p.color, 'super_knight') && (sr === dr || sc === dc) && isPathClear(sr, sc, dr, dc)) return true;
-                    if (hasAugment(p.color, 'final_knight') && absDr === absDc && isPathClear(sr, sc, dr, dc)) return true;
-                    break;
-                case 'b':
-                    if (hasAugment(p.color, 'khan')) return ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2));
-                    if (absDr === absDc && (hasAugment(p.color, 'sniper_bishop') || isPathClear(sr, sc, dr, dc))) return true;
-                    break;
-                case 'r':
-                    if ((sr === dr || sc === dc) && (hasAugment(p.color, 'meteor_strike') || isPathClear(sr, sc, dr, dc))) return true;
-                    break;
-                case 'q':
-                    if ((sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
-                    break;
-                case 'k':
-                    if (absDr <= 1 && absDc <= 1) return true;
-                    if (hasAugment(p.color, 'king_attack') && absDr === 2 && absDc === 2) return true;
-                    if (hasAugment(p.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) return true;
-                    if (hasAugment(p.color, 'real_king') && (sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) return true;
-                    // Castling
-                    if (!p.moved && dr === sr && absDc === 2) {
-                        const isKingSide = dc > sc;
-                        const rookC = isKingSide ? 7 : 0;
-                        const rook = gameState.board[sr][rookC];
-                        if (rook && rook.type === 'r' && !rook.moved && isPathClear(sr, sc, sr, rookC)) return true;
+            if (gameState.timeStopTurns > 0 && p.type === 'k' && p.color === 'white') valid = true;
+            else if (hasAugment(p.color, 'necromancy') && p.type === 'k') valid = false;
+            else {
+                switch(p.type) {
+                    case 'p':
+                        const dir = (p.color === 'white' && !hasAugment('white', 'gravity')) || (p.color === 'black' && hasAugment('black', 'gravity')) ? -1 : 1;
+                        if (dc === sc && dr === sr + dir && !target) valid = true;
+                        if (dc === sc && dr === sr + 2 * dir && !p.moved && !target && !gameState.board[sr + dir][sc]) valid = true;
+                        if (absDc === 1 && dr === sr + dir && target) valid = true;
+                        if (absDc === 1 && dr === sr + dir && !target && gameState.enPassantTarget && gameState.enPassantTarget.r === dr - dir && gameState.enPassantTarget.c === dc) valid = true;
+                        if (hasAugment(p.color, 'evolve_pawn') && dr === sr && absDc === 1 && !target) valid = true;
+                        break;
+                    case 'n':
+                        if ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2)) valid = true;
+                        if (hasAugment(p.color, 'super_knight') && (sr === dr || sc === dc) && isPathClear(sr, sc, dr, dc)) valid = true;
+                        if (hasAugment(p.color, 'final_knight') && absDr === absDc && isPathClear(sr, sc, dr, dc)) valid = true;
+                        break;
+                    case 'b':
+                        if (hasAugment(p.color, 'khan')) valid = ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2));
+                        else if (absDr === absDc && (hasAugment(p.color, 'sniper_bishop') || isPathClear(sr, sc, dr, dc))) valid = true;
+                        break;
+                    case 'r':
+                        if ((sr === dr || sc === dc) && (hasAugment(p.color, 'meteor_strike') || isPathClear(sr, sc, dr, dc))) valid = true;
+                        break;
+                    case 'q':
+                        if ((sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) valid = true;
+                        break;
+                    case 'k':
+                        if (absDr <= 1 && absDc <= 1) valid = true;
+                        if (hasAugment(p.color, 'king_attack') && absDr === 2 && absDc === 2) valid = true;
+                        if (hasAugment(p.color, 'khan') && ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2))) valid = true;
+                        if (hasAugment(p.color, 'real_king') && (sr === dr || sc === dc || absDr === absDc) && isPathClear(sr, sc, dr, dc)) valid = true;
+                        if (!p.moved && dr === sr && absDc === 2) {
+                            const isKS = dc > sc;
+                            const rC = isKS ? 7 : 0;
+                            const rook = gameState.board[sr][rC];
+                            if (rook && rook.type === 'r' && !rook.moved && isPathClear(sr, sc, sr, rC) && !isCheck(p.color)) valid = true;
+                        }
+                        break;
+                }
+            }
+
+            if (valid && checkKingSafety) {
+                const originalBoard = JSON.parse(JSON.stringify(gameState.board));
+                gameState.board[dr][dc] = gameState.board[sr][sc];
+                gameState.board[sr][sc] = null;
+                const safe = !isCheck(p.color);
+                gameState.board = originalBoard;
+                return safe;
+            }
+
+            return valid;
+        }
+
+        function isPathClear(sr, sc, dr, dc) {
+            const sR = dr === sr ? 0 : (dr > sr ? 1 : -1);
+            const sC = dc === sc ? 0 : (dc > sc ? 1 : -1);
+            let r = sr + sR, c = sc + sC;
+            while (r !== dr || c !== dc) {
+                if (gameState.board[r][c]) return false;
+                r += sR; c += sC;
+            }
+            return true;
+        }
+
+        function isCheck(color) {
+            const kingPos = findKing(color);
+            if (!kingPos) return false;
+            const oppColor = color === 'white' ? 'black' : 'white';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = gameState.board[r][c];
+                    if (p && p.color === oppColor) {
+                        if (isValidMove(r, c, kingPos.r, kingPos.c, false)) return true;
                     }
-                    break;
+                }
             }
             return false;
         }
 
-        function isPathClear(sr, sc, dr, dc) {
-            const stepR = dr === sr ? 0 : (dr > sr ? 1 : -1);
-            const stepC = dc === sc ? 0 : (dc > sc ? 1 : -1);
-            let r = sr + stepR;
-            let c = sc + stepC;
-            while (r !== dr || c !== dc) {
-                if (gameState.board[r][c]) return false;
-                r += stepR;
-                c += stepC;
+        function canMove(color) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = gameState.board[r][c];
+                    if (p && p.color === color) {
+                        for (let tr = 0; tr < 8; tr++) {
+                            for (let tc = 0; tc < 8; tc++) {
+                                if (isValidMove(r, c, tr, tc, true)) return true;
+                            }
+                        }
+                    }
+                }
             }
-            return true;
+            return false;
         }
 
         async function executeMove(sr, sc, dr, dc) {
             const p = gameState.board[sr][sc];
             let target = gameState.board[dr][dc];
 
-            // Royal Guard
             if (target && hasAugment(target.color, 'royal_guard')) {
-                const kp = findKing(target.color);
-                if (kp && Math.abs(kp.r - dr) <= 1 && Math.abs(kp.c - dc) <= 1) {
+                const kPos = findKing(target.color);
+                if (kPos && Math.abs(kPos.r - dr) <= 1 && Math.abs(kPos.c - dc) <= 1) {
                     gameState.selected = null;
-                    renderBoard();
+                    updateBoardDisplay();
                     return;
                 }
             }
 
             gameState.history.push(JSON.parse(JSON.stringify(gameState.board)));
 
-            // En Passant Capture
             if (p.type === 'p' && !target && sc !== dc) {
                 target = gameState.board[sr][dc];
                 gameState.board[sr][dc] = null;
             }
 
-            // Castling Move Rook
             if (p.type === 'k' && Math.abs(sc - dc) === 2) {
-                const isKingSide = dc > sc;
-                const rOldC = isKingSide ? 7 : 0;
-                const rNewC = isKingSide ? 5 : 3;
+                const isKS = dc > sc;
+                const rOldC = isKS ? 7 : 0, rNewC = isKS ? 5 : 3;
                 gameState.board[sr][rNewC] = gameState.board[sr][rOldC];
                 gameState.board[sr][rOldC] = null;
                 gameState.board[sr][rNewC].moved = true;
             }
 
-            // Uranium
             if (p.type === 'b' && hasAugment(p.color, 'uranium')) {
-                for(let i=-1; i<=1; i++) {
-                    for(let j=-1; j<=1; j++) {
-                        const tr = dr+i, tc = dc+j;
-                        if(tr>=0 && tr<8 && tc>=0 && tc<8 && gameState.board[tr][tc]?.type !== 'k') gameState.board[tr][tc] = null;
-                    }
+                for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
+                    const tr = dr+i, tc = dc+j;
+                    if(tr>=0 && tr<8 && tc>=0 && tc<8 && gameState.board[tr][tc]?.type !== 'k') gameState.board[tr][tc] = null;
                 }
                 gameState.board[sr][sc] = null;
             } else {
@@ -571,20 +649,21 @@
             gameState.moveCount++;
             gameState.selected = null;
 
-            if (gameState.timeStopTurns > 0) {
-                gameState.timeStopTurns--;
-            } else {
-                gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
-            }
+            if (gameState.timeStopTurns > 0) gameState.timeStopTurns--;
+            else gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
 
             if (p.type === 'p' && (dr === 0 || dr === 7)) p.type = 'q';
 
-            // Augment Trigger
+            if (!canMove(gameState.turn)) {
+                if (isCheck(gameState.turn)) return endGame(p.color, "CHECKMATE");
+                else return endGame(null, "STALEMATE");
+            }
+
             if (gameState.moveCount === 6 || (gameState.moveCount > 6 && (gameState.moveCount - 6) % 4 === 0)) {
                 await startAugmentPhase();
             }
 
-            renderBoard();
+            updateBoardDisplay();
             updateUI();
             logMove(p, sr, sc, dr, dc, !!target);
         }
@@ -592,8 +671,10 @@
         async function startAugmentPhase() {
             gameState.isAugmentPhase = true;
             await showAugmentModal('white');
+            await new Promise(r => setTimeout(r, 1000)); // 연출을 위한 간격
             await showAugmentModal('black');
             gameState.isAugmentPhase = false;
+            updateBoardDisplay();
         }
 
         function showAugmentModal(player) {
@@ -601,7 +682,6 @@
                 const overlay = document.getElementById('augment-overlay');
                 const container = document.getElementById('augment-cards-container');
                 const title = document.getElementById('augment-player-turn');
-                
                 title.textContent = `${player.toUpperCase()} PLAYER SELECT`;
                 container.innerHTML = '';
                 overlay.style.display = 'flex';
@@ -615,10 +695,10 @@
                 pool.slice(0, 3).forEach(aug => {
                     const card = document.createElement('div');
                     card.className = 'augment-card';
-                    card.innerHTML = `<div class="card-title cinzel text-xl text-[#c5a059] font-bold mt-10 mb-4 h-20 flex items-center">${aug.title}</div><div class="card-desc text-sm opacity-80">${aug.desc}</div>`;
+                    card.innerHTML = `<div class="card-title cinzel text-xl text-[#c5a059] font-bold mt-10 mb-4 h-20 flex items-center justify-center">${aug.title}</div><div class="card-desc text-sm opacity-80">${aug.desc}</div>`;
                     card.onclick = async () => {
+                        overlay.style.display = 'none'; // 선택 즉시 창 닫기
                         await applyAugment(player, aug);
-                        overlay.style.display = 'none';
                         resolve();
                     };
                     container.appendChild(card);
@@ -627,27 +707,28 @@
         }
 
         async function applyAugment(player, aug) {
-            statusNotif.textContent = `${aug.title} 활성화!`;
-            statusNotif.style.display = 'block';
+            const notif = document.getElementById('status-notif');
+            notif.textContent = `${aug.title} 활성화!`;
+            notif.style.display = 'block';
+            
             await new Promise(r => setTimeout(r, 1500));
-            statusNotif.style.display = 'none';
+            notif.style.display = 'none';
 
             gameState.augments[player].push(aug.id);
             const li = document.createElement('li');
             li.innerHTML = `<span class="text-[#c5a059] font-bold">[${player[0].toUpperCase()}]</span> ${aug.title}`;
             document.getElementById('active-augments').appendChild(li);
 
-            // Special Immediate Effects
             if (aug.id === 'frontline') {
-                for(let r=0; r<8; r++) {
-                    for(let c=0; c<8; c++) {
+                const dir = player === 'white' ? -1 : 1; // 플레이어 진영에 따른 방향 수정
+                for (let r = (dir === -1 ? 0 : 7); dir === -1 ? r < 8 : r >= 0; r -= dir) {
+                    for (let c = 0; c < 8; c++) {
                         const p = gameState.board[r][c];
-                        if(p?.type === 'p' && p?.color === player) {
-                            const dir = player === 'white' ? -1 : 1;
+                        if (p?.type === 'p' && p?.color === player) {
                             const nr = r + dir;
-                            if(nr >= 0 && nr < 8) {
-                                if(gameState.board[nr][c]?.type !== 'k') gameState.board[nr][c] = null;
-                                if(!gameState.board[nr][c]) { gameState.board[nr][c] = p; gameState.board[r][c] = null; }
+                            if (nr >= 0 && nr < 8) {
+                                if (gameState.board[nr][c]?.type !== 'k') gameState.board[nr][c] = null;
+                                if (!gameState.board[nr][c]) { gameState.board[nr][c] = p; gameState.board[r][c] = null; }
                             }
                         }
                     }
@@ -657,29 +738,38 @@
                 gameState.turn = 'white';
             } else if (aug.id === 'shocking_pawns') {
                 const opp = player === 'white' ? 'black' : 'white';
-                let pieces = [];
-                for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(gameState.board[r][c]?.color === opp && gameState.board[r][c]?.type !== 'k') pieces.push({r,c});
-                pieces.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(pos => gameState.board[pos.r][pos.c].type = 'p');
+                let ps = [];
+                for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(gameState.board[r][c]?.color === opp && gameState.board[r][c]?.type !== 'k') ps.push({r,c});
+                ps.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(pos => gameState.board[pos.r][pos.c].type = 'p');
             }
-            renderBoard();
+            updateBoardDisplay();
         }
 
         function hasAugment(color, id) { return gameState.augments[color].includes(id); }
 
         function startGame() {
+            resetGameState();
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
+            
             gameState.startTime = Date.now();
-            setInterval(() => {
-                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
-                const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-                const s = (elapsed % 60).toString().padStart(2, '0');
+            gameState.timerInterval = setInterval(() => {
+                const el = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const m = Math.floor(el / 60).toString().padStart(2, '0');
+                const s = (el % 60).toString().padStart(2, '0');
                 document.getElementById('timer-display').textContent = `${m}:${s}`;
             }, 1000);
+            
             initBoard();
         }
 
-        function changeTheme(theme) { document.body.className = theme; }
+        function exitToLobby() {
+            resetGameState();
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('lobby').style.display = 'flex';
+        }
+
+        function changeTheme(v) { document.body.className = v; }
 
         function openModal(id) {
             if (id === 'modal-encyclopedia') {
@@ -692,9 +782,9 @@
         function closeModal(e, id) { if(e.target === document.getElementById(id)) document.getElementById(id).style.display = 'none'; }
 
         function updateUI() {
-            const turnDisplay = document.getElementById('turn-display');
-            turnDisplay.textContent = gameState.turn.toUpperCase();
-            turnDisplay.style.color = gameState.turn === 'white' ? '#fff' : '#c5a059';
+            const td = document.getElementById('turn-display');
+            td.textContent = gameState.turn.toUpperCase();
+            td.style.color = gameState.turn === 'white' ? '#fff' : '#c5a059';
         }
 
         function logMove(p, sr, sc, dr, dc, cap) {
@@ -713,18 +803,19 @@
                 gameState.board = gameState.history.pop();
                 gameState.turn = gameState.turn === 'white' ? 'black' : 'white';
                 gameState.moveCount--;
-                renderBoard();
+                updateBoardDisplay();
                 updateUI();
             }
         }
 
-        function endGame(winner) {
+        function endGame(w, type = "VICTORIOUS") {
             if (document.getElementById('shake-toggle').checked) document.getElementById('chess-board').classList.add('shake-anim');
             setTimeout(() => {
-                const over = document.createElement('div');
-                over.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:4000;display:flex;flex-direction:column;justify-content:center;align-items:center;";
-                over.innerHTML = `<h1 class="cinzel text-7xl text-[#c5a059] mb-10 font-black">${winner.toUpperCase()} VICTORIOUS</h1><button onclick="location.reload()" class="btn-gold cinzel">RETURN TO MENU</button>`;
-                document.body.appendChild(over);
+                const ov = document.createElement('div');
+                ov.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:4000;display:flex;flex-direction:column;justify-content:center;align-items:center;";
+                const title = w ? `${w.toUpperCase()} ${type}` : type;
+                ov.innerHTML = `<h1 class="cinzel text-7xl text-[#c5a059] mb-10 font-black text-center">${title}</h1><button onclick="location.reload()" class="btn-gold cinzel">BACK TO LOBBY</button>`;
+                document.body.appendChild(ov);
             }, 500);
         }
     </script>
